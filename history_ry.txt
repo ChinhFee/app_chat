@@ -1,0 +1,16 @@
+hen|::|ry|::|true|::|hu
+hen|::|hen|::|false|::|hẻ
+hen|::|hen|::|false|::|sao
+hen|::|hen|::|false|::|bị gì
+hen|::|hen|::|false|::|mà
+hen|::|hen|::|false|::|như
+hen|::|hen|::|false|::|này
+hen|::|hen|::|false|::|hả
+hen|::|hen|::|false|::|cậu
+hen|::|ry|::|true|::|tớ
+hen|::|ry|::|true|::|đâu
+hen|::|ry|::|true|::|biết
+hen|::|ry|::|true|::|đâu
+hen|::|ry|::|true|::|cậu oi
+ALL|::|ry|::|true|::|hy
+hen|::|ry|::|true|::|he

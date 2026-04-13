@@ -1,0 +1,16 @@
+ALL|::|hen|::|true|::|hi
+ry|::|ry|::|false|::|hu
+ry|::|hen|::|true|::|hẻ
+ry|::|hen|::|true|::|sao
+ry|::|hen|::|true|::|bị gì
+ry|::|hen|::|true|::|mà
+ry|::|hen|::|true|::|như
+ry|::|hen|::|true|::|này
+ry|::|hen|::|true|::|hả
+ry|::|hen|::|true|::|cậu
+ry|::|ry|::|false|::|tớ
+ry|::|ry|::|false|::|đâu
+ry|::|ry|::|false|::|biết
+ry|::|ry|::|false|::|đâu
+ry|::|ry|::|false|::|cậu oi
+ry|::|hen|::|true|::|o cau dau roi
