@@ -216,7 +216,7 @@ public class ModernChatApp {
         sidebar.putClientProperty("FlatLaf.style", "arc: 20");
         sidebar.setBorder(new EmptyBorder(20, 15, 20, 15));
 
-        // 2.1 Header Sidebar (Đã dọn dẹp và gom nút + sang phải)
+        // 2.1 Header Sidebar
         JPanel sidebarHeader = new JPanel(new BorderLayout(0, 15));
         sidebarHeader.setOpaque(false);
         
@@ -227,19 +227,16 @@ public class ModernChatApp {
         JLabel lblChats = new JLabel("Chats HCD");
         lblChats.setFont(new Font("Segoe UI", Font.BOLD, 22));
         
-        // Nút Tạo Nhóm (+)
+        // Đã sửa lại nút dấu + theo yêu cầu (Chỉ text, không nền)
         JButton btnCreateGroup = new JButton("+");
         btnCreateGroup.setToolTipText("Tạo nhóm chat mới");
-        btnCreateGroup.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        btnCreateGroup.setBackground(new Color(79, 70, 229));
-        btnCreateGroup.setForeground(Color.WHITE);
-        btnCreateGroup.setPreferredSize(new Dimension(36, 36));
-        btnCreateGroup.putClientProperty("FlatLaf.style", "arc: 999"); // Tròn xoe
+        btnCreateGroup.setFont(new Font("Segoe UI", Font.PLAIN, 32));
+        btnCreateGroup.setForeground(new Color(79, 70, 229));
+        btnCreateGroup.setContentAreaFilled(false);
+        btnCreateGroup.setBorderPainted(false);
+        btnCreateGroup.setFocusPainted(false);
         btnCreateGroup.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnCreateGroup.addActionListener(e -> {
-            String groupName = JOptionPane.showInputDialog(frame, "Nhập tên nhóm:");
-            if (groupName != null && !groupName.isEmpty()) outToServer.println("JOINGROUP " + groupName);
-        });
+        btnCreateGroup.addActionListener(e -> showCreateGroupPopup());
 
         myProfilePanel.add(lblMyProfile, BorderLayout.WEST);
         myProfilePanel.add(lblChats, BorderLayout.CENTER);
@@ -365,7 +362,7 @@ public class ModernChatApp {
                 File file = fileChooser.getSelectedFile();
                 try {
                     fileClient.sendFile("localhost", 1988, file.getAbsolutePath());
-                    appendMessageBubble(currentChatTarget, currentUsername, "Đã gửi tệp: " + file.getName(), true, true);
+                    appendMessageBubble(currentChatTarget, currentUsername, "Đã gửi tệp: " + file.getName(), true, true, null);
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Lỗi gửi file: " + ex.getMessage());
                 }
@@ -380,7 +377,7 @@ public class ModernChatApp {
                 } else {
                     outToServer.println("CHATPRIVATE " + currentChatTarget + "|" + msg);
                 }
-                appendMessageBubble(currentChatTarget, currentUsername, msg, true, true);
+                appendMessageBubble(currentChatTarget, currentUsername, msg, true, true, null);
                 txtMessage.setText("");
             }
         });
@@ -397,6 +394,103 @@ public class ModernChatApp {
 
         return mainPanel;
     }
+
+    // ==========================================
+    // POPUP TẠO NHÓM CHAT ĐẸP
+    // ==========================================
+    private void showCreateGroupPopup() {
+        JDialog dialog = new JDialog(frame, "Tạo Nhóm Chat", true);
+        dialog.setSize(400, 500);
+        dialog.setLocationRelativeTo(frame);
+        dialog.getContentPane().setBackground(Color.WHITE);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(Color.WHITE);
+        content.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        JLabel lblTitle = new JLabel("Nhập Tên Nhóm");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JTextField txtGroupName = new JTextField();
+        txtGroupName.putClientProperty("JTextField.placeholderText", "Ví dụ: Team Backend");
+        txtGroupName.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        txtGroupName.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblMembers = new JLabel("Mời thành viên (Đang hoạt động):");
+        lblMembers.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblMembers.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lblMembers.setBorder(new EmptyBorder(20, 0, 10, 0));
+
+        JPanel usersPanel = new JPanel();
+        usersPanel.setLayout(new BoxLayout(usersPanel, BoxLayout.Y_AXIS));
+        usersPanel.setBackground(Color.WHITE);
+        
+        HashMap<String, JCheckBox> checkboxes = new HashMap<>();
+        for (String user : onlineUsers) {
+            if (!user.equals(currentUsername)) {
+                JCheckBox cb = new JCheckBox(user);
+                cb.setBackground(Color.WHITE);
+                cb.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+                cb.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                checkboxes.put(user, cb);
+                usersPanel.add(cb);
+                usersPanel.add(Box.createVerticalStrut(5));
+            }
+        }
+        
+        if (checkboxes.isEmpty()) {
+            JLabel lblEmpty = new JLabel("Chưa có ai online để mời.");
+            lblEmpty.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+            lblEmpty.setForeground(Color.GRAY);
+            usersPanel.add(lblEmpty);
+        }
+
+        JScrollPane scroll = new JScrollPane(usersPanel);
+        scroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+
+        JButton btnCreate = new JButton("Bắt Đầu Trò Chuyện");
+        btnCreate.setBackground(new Color(79, 70, 229));
+        btnCreate.setForeground(Color.WHITE);
+        btnCreate.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btnCreate.putClientProperty("FlatLaf.style", "arc: 999");
+        btnCreate.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        btnCreate.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btnCreate.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        btnCreate.addActionListener(e -> {
+            String gName = txtGroupName.getText().trim();
+            if (gName.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Vui lòng nhập tên nhóm!");
+                return;
+            }
+            
+            // Lệnh kết nối cho bản thân
+            outToServer.println("JOINGROUP " + gName);
+            
+            // Gửi tin nhắn ẩn mời người khác tham gia (Mẹo xử lý không cần đổi Server)
+            for (String u : checkboxes.keySet()) {
+                if (checkboxes.get(u).isSelected()) {
+                    outToServer.println("CHATPRIVATE " + u + "|Tôi đã tạo nhóm [" + gName + "]. Hãy gõ lệnh JOINGROUP " + gName + " để tham gia nhé!");
+                }
+            }
+            dialog.dispose();
+        });
+
+        content.add(lblTitle);
+        content.add(Box.createVerticalStrut(8));
+        content.add(txtGroupName);
+        content.add(lblMembers);
+        content.add(scroll);
+        content.add(Box.createVerticalStrut(25));
+        content.add(btnCreate);
+
+        dialog.add(content);
+        dialog.setVisible(true);
+    }
+
 
     // ==========================================
     // QUẢN LÝ TRẠNG THÁI ONLINE VÀ ĐỊNH TUYẾN CHAT
@@ -464,7 +558,7 @@ public class ModernChatApp {
                 lblChatName.setText(name);
                 lblChatAvatar.setIcon(new AvatarIcon(targetId, 45, getColorForName(targetId)));
                 
-                if (targetId.equals("ALL") || targetId.equals("GROUP_ACTION")) {
+                if (targetId.equals("ALL")) {
                     lblChatStatus.setText("Public Channel");
                     lblChatStatus.setForeground(new Color(16, 163, 127));
                 } else {
@@ -488,16 +582,18 @@ public class ModernChatApp {
         chatListPanel.repaint();
     }
 
-    private void saveMessageToHistory(String targetId, String sender, String message, boolean isMe) {
+    // ĐÃ SỬA: Lưu thêm cả thời gian lúc gửi vào file text
+    private void saveMessageToHistory(String targetId, String sender, String message, boolean isMe, String timeStr) {
         try {
             File f = new File("history_" + currentUsername + ".txt");
             FileWriter fw = new FileWriter(f, true);
             String cleanMsg = message.replace("\n", "\\n"); 
-            fw.write(targetId + "|::|" + sender + "|::|" + isMe + "|::|" + cleanMsg + "\n");
+            fw.write(targetId + "|::|" + sender + "|::|" + isMe + "|::|" + timeStr + "|::|" + cleanMsg + "\n");
             fw.close();
         } catch (IOException e) { e.printStackTrace(); }
     }
 
+    // ĐÃ SỬA: Load chính xác thời gian cũ, không lấy giờ hiện tại nữa
     private void loadHistory() {
         try {
             File f = new File("history_" + currentUsername + ".txt");
@@ -506,12 +602,19 @@ public class ModernChatApp {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\\|\\:\\:\\|");
-                if (parts.length == 4) {
+                if (parts.length >= 5) { // File mới có 5 thông số
+                    String targetId = parts[0];
+                    String sender = parts[1];
+                    boolean isMe = Boolean.parseBoolean(parts[2]);
+                    String timeStr = parts[3];
+                    String message = parts[4].replace("\\n", "\n");
+                    appendMessageBubble(targetId, sender, message, isMe, false, timeStr);
+                } else if (parts.length == 4) { // File cũ chỉ có 4 thông số (Hỗ trợ tương thích ngược)
                     String targetId = parts[0];
                     String sender = parts[1];
                     boolean isMe = Boolean.parseBoolean(parts[2]);
                     String message = parts[3].replace("\\n", "\n");
-                    appendMessageBubble(targetId, sender, message, isMe, false);
+                    appendMessageBubble(targetId, sender, message, isMe, false, new SimpleDateFormat("HH:mm").format(new Date()));
                 }
             }
             br.close();
@@ -521,10 +624,10 @@ public class ModernChatApp {
     // ==========================================
     // KHỐI VẼ BONG BÓNG CHAT VÀ ĐỊNH TUYẾN
     // ==========================================
-    private void appendMessageBubble(String targetId, String sender, String message, boolean isMe, boolean saveToFile) {
+    private void appendMessageBubble(String targetId, String sender, String message, boolean isMe, boolean saveToFile, String timeStr) {
         JPanel targetPanel = getOrCreateChatPanel(targetId);
         
-        if (!targetId.equals("ALL") && !targetId.equals("GROUP_ACTION")) {
+        if (!targetId.equals("ALL")) {
             addActiveChat(targetId, targetId, null);
         }
 
@@ -544,7 +647,11 @@ public class ModernChatApp {
         
         int textWidth = Math.min(message.length() * 8, 400); 
         txtMsg.setSize(new Dimension(textWidth, Short.MAX_VALUE));
-        String timeStr = new SimpleDateFormat("HH:mm").format(new Date());
+        
+        // Lấy giờ: Nếu không truyền vào giờ cũ thì mới tạo giờ hiện tại
+        if (timeStr == null) {
+            timeStr = new SimpleDateFormat("HH:mm").format(new Date());
+        }
 
         if (isMe) {
             txtMsg.setForeground(Color.WHITE);
@@ -601,7 +708,7 @@ public class ModernChatApp {
         targetPanel.add(wrapper);
 
         if (saveToFile) {
-            saveMessageToHistory(targetId, sender, message, isMe);
+            saveMessageToHistory(targetId, sender, message, isMe, timeStr);
         }
 
         if (currentChatTarget.equals(targetId)) {
@@ -730,7 +837,7 @@ public class ModernChatApp {
                             if (splitMsg.length == 2) {
                                 String rawSender = splitMsg[0].replace("BROADCAST ", "").trim();
                                 if (!rawSender.equals(currentUsername)) {
-                                    appendMessageBubble("ALL", rawSender, splitMsg[1].trim(), false, true);
+                                    appendMessageBubble("ALL", rawSender, splitMsg[1].trim(), false, true, null);
                                 }
                             }
                         });
@@ -740,7 +847,7 @@ public class ModernChatApp {
                             String[] splitMsg = res.split(":", 2);
                             if (splitMsg.length == 2) {
                                 String rawSender = splitMsg[0].replace("PRIVATE từ ", "").trim();
-                                appendMessageBubble(rawSender, rawSender, splitMsg[1].trim(), false, true);
+                                appendMessageBubble(rawSender, rawSender, splitMsg[1].trim(), false, true, null);
                             }
                         });
                     }

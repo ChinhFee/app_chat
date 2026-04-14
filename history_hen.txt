@@ -14,3 +14,5 @@ ry|::|ry|::|false|::|biết
 ry|::|ry|::|false|::|đâu
 ry|::|ry|::|false|::|cậu oi
 ry|::|hen|::|true|::|o cau dau roi
+ry|::|hen|::|true|::|hi
+ry|::|hen|::|true|::|08:24|::|he he
