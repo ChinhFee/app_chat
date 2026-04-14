@@ -36,11 +36,11 @@ public class ModernChatApp {
     private String currentUsername = "Unknown";
     private String currentChatTarget = "ALL"; 
 
-    // QUẢN LÝ ĐA HỘP THOẠI VÀ TRẠNG THÁI (MỚI)
+    // QUẢN LÝ ĐA HỘP THOẠI VÀ TRẠNG THÁI
     private HashMap<String, JPanel> chatPanelsMap = new HashMap<>();
     private HashSet<String> activeChats = new HashSet<>();
-    private HashSet<String> onlineUsers = new HashSet<>(); // Danh sách đang online
-    private HashMap<String, JLabel> statusLabelsMap = new HashMap<>(); // Lưu trữ các nhãn trạng thái để update real-time
+    private HashSet<String> onlineUsers = new HashSet<>(); 
+    private HashMap<String, JLabel> statusLabelsMap = new HashMap<>(); 
 
     private static final Color[] AVATAR_COLORS = {
         new Color(239, 68, 68), new Color(249, 115, 22), new Color(16, 185, 129), 
@@ -96,11 +96,13 @@ public class ModernChatApp {
         txtUserLogin.putClientProperty("JTextField.placeholderText", "Tên đăng nhập");
         txtUserLogin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         txtUserLogin.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txtUserLogin.setAlignmentX(Component.CENTER_ALIGNMENT); 
 
         txtPassLogin = new JPasswordField();
         txtPassLogin.putClientProperty("JTextField.placeholderText", "Mật khẩu");
         txtPassLogin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         txtPassLogin.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txtPassLogin.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         JButton btnLogin = new JButton("Vào Chat");
         btnLogin.setBackground(new Color(79, 70, 229));
@@ -108,6 +110,7 @@ public class ModernChatApp {
         btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnLogin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         btnLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         JButton btnGoToReg = new JButton("Chưa có tài khoản? Đăng ký ngay");
         btnGoToReg.setContentAreaFilled(false);
@@ -140,11 +143,13 @@ public class ModernChatApp {
         txtUserReg.putClientProperty("JTextField.placeholderText", "Tên đăng nhập mới");
         txtUserReg.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         txtUserReg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txtUserReg.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         txtPassReg = new JPasswordField();
         txtPassReg.putClientProperty("JTextField.placeholderText", "Mật khẩu mới");
         txtPassReg.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         txtPassReg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txtPassReg.setAlignmentX(Component.CENTER_ALIGNMENT); 
 
         JButton btnRegister = new JButton("Đăng Ký");
         btnRegister.setBackground(new Color(16, 185, 129));
@@ -152,6 +157,7 @@ public class ModernChatApp {
         btnRegister.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnRegister.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         btnRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRegister.setAlignmentX(Component.CENTER_ALIGNMENT); 
 
         JButton btnBackToLogin = new JButton("Quay lại Đăng nhập");
         btnBackToLogin.setContentAreaFilled(false);
@@ -210,7 +216,7 @@ public class ModernChatApp {
         sidebar.putClientProperty("FlatLaf.style", "arc: 20");
         sidebar.setBorder(new EmptyBorder(20, 15, 20, 15));
 
-        // 2.1 Header Sidebar
+        // 2.1 Header Sidebar (Đã dọn dẹp và gom nút + sang phải)
         JPanel sidebarHeader = new JPanel(new BorderLayout(0, 15));
         sidebarHeader.setOpaque(false);
         
@@ -221,13 +227,14 @@ public class ModernChatApp {
         JLabel lblChats = new JLabel("Chats HCD");
         lblChats.setFont(new Font("Segoe UI", Font.BOLD, 22));
         
+        // Nút Tạo Nhóm (+)
         JButton btnCreateGroup = new JButton("+");
         btnCreateGroup.setToolTipText("Tạo nhóm chat mới");
         btnCreateGroup.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnCreateGroup.setBackground(new Color(79, 70, 229));
         btnCreateGroup.setForeground(Color.WHITE);
         btnCreateGroup.setPreferredSize(new Dimension(36, 36));
-        btnCreateGroup.putClientProperty("FlatLaf.style", "arc: 999");
+        btnCreateGroup.putClientProperty("FlatLaf.style", "arc: 999"); // Tròn xoe
         btnCreateGroup.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnCreateGroup.addActionListener(e -> {
             String groupName = JOptionPane.showInputDialog(frame, "Nhập tên nhóm:");
@@ -278,7 +285,6 @@ public class ModernChatApp {
         chatListPanel.setLayout(new BoxLayout(chatListPanel, BoxLayout.Y_AXIS));
         chatListPanel.setOpaque(false);
         
-        // Khởi tạo kênh chung mặc định
         addActiveChat("ALL", "Kênh Server Tổng", "Public Channel");
         
         chatListWrapper.add(chatListPanel, BorderLayout.NORTH); 
@@ -395,19 +401,15 @@ public class ModernChatApp {
     // ==========================================
     // QUẢN LÝ TRẠNG THÁI ONLINE VÀ ĐỊNH TUYẾN CHAT
     // ==========================================
-    
-    // Hàm cập nhật chữ "Đang hoạt động" / "Ngoại tuyến" toàn hệ thống
     private void updateUserStatus(String username, boolean isOnline) {
         String statusText = isOnline ? "Đang hoạt động" : "Ngoại tuyến";
         Color statusColor = isOnline ? new Color(16, 163, 127) : new Color(150, 150, 150);
 
-        // 1. Cập nhật Sidebar bên trái (Nếu người đó nằm trong danh sách đang chat)
         if (statusLabelsMap.containsKey(username)) {
             JLabel lbl = statusLabelsMap.get(username);
             lbl.setText(statusText);
         }
 
-        // 2. Cập nhật Header khung chat (Nếu đang mở đúng khung chat của người đó)
         if (currentChatTarget.equals(username)) {
             lblChatStatus.setText(statusText);
             lblChatStatus.setForeground(statusColor);
@@ -429,7 +431,6 @@ public class ModernChatApp {
         if (activeChats.contains(targetId)) return;
         activeChats.add(targetId);
         
-        // Tự động kiểm tra xem người này có đang online không
         String statusText = forceStatus != null ? forceStatus : (onlineUsers.contains(targetId) ? "Đang hoạt động" : "Ngoại tuyến");
         
         JPanel item = new JPanel(new BorderLayout(15, 0));
@@ -451,7 +452,7 @@ public class ModernChatApp {
         JLabel lblSub = new JLabel(statusText);
         lblSub.setForeground(new Color(130, 130, 130));
         lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        statusLabelsMap.put(targetId, lblSub); // Đưa vào trạm kiểm soát trạng thái
+        statusLabelsMap.put(targetId, lblSub); 
         
         textPanel.add(lblName);
         textPanel.add(lblSub);
@@ -463,7 +464,6 @@ public class ModernChatApp {
                 lblChatName.setText(name);
                 lblChatAvatar.setIcon(new AvatarIcon(targetId, 45, getColorForName(targetId)));
                 
-                // Set Header Status
                 if (targetId.equals("ALL") || targetId.equals("GROUP_ACTION")) {
                     lblChatStatus.setText("Public Channel");
                     lblChatStatus.setForeground(new Color(16, 163, 127));
@@ -703,7 +703,7 @@ public class ModernChatApp {
                                 if (!u.isEmpty() && !u.equals(currentUsername)) {
                                     onlineUsers.add(u);
                                     addOnlineUser(u);
-                                    updateUserStatus(u, true); // Update nhãn nếu có sẵn
+                                    updateUserStatus(u, true); 
                                 }
                             }
                         });
@@ -721,7 +721,7 @@ public class ModernChatApp {
                             String u = res.substring(10).trim();
                             onlineUsers.remove(u);
                             removeOnlineUser(u);
-                            updateUserStatus(u, false); // ĐỔI TRẠNG THÁI SANG NGOẠI TUYẾN
+                            updateUserStatus(u, false); 
                         });
                     }
                     else if (res.startsWith("BROADCAST")) {
