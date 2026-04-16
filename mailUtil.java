@@ -93,7 +93,8 @@ public class mailUtil {
       System.out.println("Offline notification email sent successfully to: " + toEmail);
     } catch (MessagingException e) {
       // Khối 5: Xử lý và ghi lại các lỗi gửi email
-      System.out.println("Error sending email: " + e.getMessage());
+      System.err.println("Error sending email to " + toEmail + ": " + e.getMessage());
+      e.printStackTrace();
     }
   }
 }

@@ -147,7 +147,8 @@ class clientHandler extends Thread {
     } catch (IOException e) {
       // Khối 6: Xử lí lỗi kết nối
       // Bắt các lỗi mạng hoặc ngắt kết nối bất ngờ của client
-      System.out.println("Connection error from client " + username + ": " + e.getMessage());
+      System.err.println("Connection error from client " + username + ": " + e.getMessage());
+      e.printStackTrace();
     } finally {
       // Khối 7: Các hoạt động dọn dẹp (luôn được thực thi)
       // 1. Xóa người dùng khỏi danh sách client đang hoạt động
@@ -167,7 +168,8 @@ class clientHandler extends Thread {
           System.out.println("Service thread closed for client: " + username);
         }
       } catch (IOException e) {
-        System.out.println("Error closing socket: " + e.getMessage());
+        System.err.println("Error closing socket for client " + username + ": " + e.getMessage());
+        e.printStackTrace();
       }
     }
   } // End of run() method
@@ -385,7 +387,8 @@ class clientHandler extends Thread {
       return true; // Đăng ký thành công
     } catch (IOException e) {
       // Khối 4: Xử lí lỗi I/O của file
-      System.out.println("File write error: " + e.getMessage());
+      System.err.println("File write error in registerUser: " + e.getMessage());
+      e.printStackTrace();
       return false;
     }
   }
@@ -425,7 +428,8 @@ class clientHandler extends Thread {
       scanner.close();
     } catch (IOException e) {
       // Khối 4: Xử lí lỗi I/O của file
-      System.out.println("File read error: " + e.getMessage());
+      System.err.println("File read error in checkLogin: " + e.getMessage());
+      e.printStackTrace();
     }
     return false; // Thông tin xác thực không được tìm thấy hoặc xảy ra lỗi
   }
@@ -474,7 +478,8 @@ class clientHandler extends Thread {
       scanner.close();
     } catch (IOException e) {
       // Khối 4: Xử lí lỗi I/O của file
-      System.out.println("File read error: " + e.getMessage());
+      System.err.println("File read error in getEmailFromUsersFile: " + e.getMessage());
+      e.printStackTrace();
     }
     return null; // Người dùng không được tìm thấy hoặc xảy ra lỗi
   }

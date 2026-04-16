@@ -79,7 +79,8 @@ public class chatServer {
     } catch (IOException e) {
       // Khối 4: Xử lí lỗi
       // Ghi lại bất kì lỗi nào xảy ra trong quá trình khởi tạo hoặc hoạt động của server
-      System.out.println("Server initialization error: " + e.getMessage());
+      System.err.println("Server initialization error: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 

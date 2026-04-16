@@ -610,7 +610,10 @@ public class ModernChatApp {
             String cleanMsg = message.replace("\n", "\\n"); 
             fw.write(targetId + "|::|" + sender + "|::|" + isMe + "|::|" + timeStr + "|::|" + cleanMsg + "\n");
             fw.close();
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            System.err.println("Error saving chat history for " + currentUsername + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void loadHistory() {
@@ -637,7 +640,10 @@ public class ModernChatApp {
                 }
             }
             br.close();
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            System.err.println("Error loading chat history for " + currentUsername + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // ==========================================
@@ -800,7 +806,9 @@ public class ModernChatApp {
             lblMyProfile.setIcon(new AvatarIcon(user, 45, getColorForName(user)));
             outToServer.println(command);
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(frame, "Lỗi kết nối Server!");
+            System.err.println("Unable to connect to server for user " + user + ": " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Lỗi kết nối Server: " + e.getMessage());
         }
     }
 
@@ -870,7 +878,10 @@ public class ModernChatApp {
                         });
                     }
                 }
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                System.err.println("Error reading from server socket:");
+                e.printStackTrace();
+            }
         });
         listener.start();
     }
@@ -941,7 +952,10 @@ public class ModernChatApp {
             UIManager.put("ScrollBar.thumbArc", 999);
             UIManager.put("ScrollBar.thumbInsets", new Insets(2, 2, 2, 2));
             UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (Exception ex) {}
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize UI look and feel:");
+            ex.printStackTrace();
+        }
         SwingUtilities.invokeLater(() -> new ModernChatApp());
     }
 }

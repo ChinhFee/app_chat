@@ -44,6 +44,7 @@ public class fileServer extends Thread {
       System.out.println("File Server is running on port: " + port);
     } catch (Exception e) {
       // Khối 2: In theo dõi ngăn xếp cho bất kỳ lỗi khởi tạo nào
+      System.err.println("FileServer initialization error on port " + port + ": " + e.getMessage());
       e.printStackTrace();
     }
   }
@@ -68,6 +69,7 @@ public class fileServer extends Thread {
         saveFile(clientSock);
       } catch (Exception e) {
         // Khối 4: Xử lý bất kỳ ngoại lệ nào trong quá trình kết nối hoặc xử lý tệp
+        System.err.println("FileServer accept/save error: " + e.getMessage());
         e.printStackTrace();
       }
     }
@@ -113,7 +115,7 @@ public class fileServer extends Thread {
     dis.close();
 
     // Khối 5: Ghi lại việc nhận tệp thành công
-    System.out.println("File received successfully!");
+    System.out.println("File received successfully from " + clientSock.getRemoteSocketAddress());
   }
 
   /**

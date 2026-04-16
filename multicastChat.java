@@ -91,6 +91,8 @@ public class multicastChat {
             }
           } catch (IOException e) {
             // Lỗi kết nối hoặc socket đã đóng
+            System.err.println("Multicast receive error on " + ipAddress + ":" + port + " - " + e.getMessage());
+            e.printStackTrace();
             break;
           }
         }
@@ -121,7 +123,7 @@ public class multicastChat {
       }
     } catch (IOException ex) {
       // Xử lý lỗi mạng hoặc I/O
-      System.out.println("Error in multicast chat: " + ex.getMessage());
+      System.err.println("Error in multicast chat [" + ipAddress + ":" + port + "] for user " + username + ": " + ex.getMessage());
       ex.printStackTrace();
     }
   }
