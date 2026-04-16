@@ -16,3 +16,8 @@ ry|::|ry|::|false|::|cậu oi
 ry|::|hen|::|true|::|o cau dau roi
 ry|::|hen|::|true|::|hi
 ry|::|hen|::|true|::|08:24|::|he he
+ry|::|hen|::|true|::|12:50|::|Đã gửi tệp: esp8266_fan.ino
+dung|::|dung|::|false|::|13:38|::|Tôi đã tạo nhóm [hi]. Hãy gõ lệnh JOINGROUP hi để tham gia nhé!
+dung|::|dung|::|false|::|13:38|::|hi
+dung|::|hen|::|true|::|13:38|::|JOINGROUP hi
+dung|::|hen|::|true|::|13:38|::|nu

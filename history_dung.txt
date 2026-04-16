@@ -1,0 +1,4 @@
+hen|::|dung|::|true|::|13:38|::|hi
+hen|::|hen|::|false|::|13:38|::|JOINGROUP hi
+quyen|::|dung|::|true|::|15:31|::|hi
+quyen|::|quyen|::|false|::|15:32|::|hú

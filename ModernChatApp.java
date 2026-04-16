@@ -15,8 +15,8 @@ public class ModernChatApp {
     private JPanel cardPanel;
     private CardLayout cardLayout;
 
-    // UI - Đăng nhập / Đăng ký
-    private JTextField txtUserLogin, txtUserReg;
+    // UI - Đăng nhập / Đăng ký (ĐÃ THÊM txtEmailReg)
+    private JTextField txtUserLogin, txtUserReg, txtEmailReg;
     private JPasswordField txtPassLogin, txtPassReg;
 
     // UI - Vùng Chat
@@ -78,7 +78,8 @@ public class ModernChatApp {
         wrapper.setBackground(new Color(243, 246, 253));
 
         JPanel authBox = new JPanel(new CardLayout());
-        authBox.setPreferredSize(new Dimension(420, 520)); 
+        // Tăng chiều cao lên 560 để chứa thêm ô Email
+        authBox.setPreferredSize(new Dimension(420, 560)); 
         authBox.putClientProperty("FlatLaf.style", "arc: 35");
         authBox.setBackground(Color.WHITE);
         authBox.setBorder(new EmptyBorder(40, 40, 40, 40));
@@ -119,7 +120,7 @@ public class ModernChatApp {
         btnGoToReg.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnGoToReg.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        loginPanel.add(Box.createVerticalStrut(30));
+        loginPanel.add(Box.createVerticalStrut(40));
         loginPanel.add(lblLoginTitle);
         loginPanel.add(Box.createVerticalStrut(45));
         loginPanel.add(txtUserLogin);
@@ -144,6 +145,13 @@ public class ModernChatApp {
         txtUserReg.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
         txtUserReg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         txtUserReg.setAlignmentX(Component.CENTER_ALIGNMENT); 
+
+        // Ô nhập Email Mới
+        txtEmailReg = new JTextField();
+        txtEmailReg.putClientProperty("JTextField.placeholderText", "Email cá nhân");
+        txtEmailReg.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        txtEmailReg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txtEmailReg.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         txtPassReg = new JPasswordField();
         txtPassReg.putClientProperty("JTextField.placeholderText", "Mật khẩu mới");
@@ -165,15 +173,18 @@ public class ModernChatApp {
         btnBackToLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnBackToLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        regPanel.add(Box.createVerticalStrut(30));
-        regPanel.add(lblRegTitle);
-        regPanel.add(Box.createVerticalStrut(40));
-        regPanel.add(txtUserReg);
+        // Bố cục lại khoảng cách để nhét vừa 3 ô
         regPanel.add(Box.createVerticalStrut(20));
+        regPanel.add(lblRegTitle);
+        regPanel.add(Box.createVerticalStrut(35));
+        regPanel.add(txtUserReg);
+        regPanel.add(Box.createVerticalStrut(15));
+        regPanel.add(txtEmailReg); // Nạp ô Email vào Giao diện
+        regPanel.add(Box.createVerticalStrut(15));
         regPanel.add(txtPassReg);
-        regPanel.add(Box.createVerticalStrut(30));
+        regPanel.add(Box.createVerticalStrut(25));
         regPanel.add(btnRegister);
-        regPanel.add(Box.createVerticalStrut(10));
+        regPanel.add(Box.createVerticalStrut(5));
         regPanel.add(btnBackToLogin);
 
         authBox.add(loginPanel, "LOGIN_SCREEN");
@@ -183,17 +194,28 @@ public class ModernChatApp {
         btnGoToReg.addActionListener(e -> cl.show(authBox, "REG_SCREEN"));
         btnBackToLogin.addActionListener(e -> cl.show(authBox, "LOGIN_SCREEN"));
 
+        // Xử lý nút Đăng Nhập
         btnLogin.addActionListener(e -> {
-            if(!txtUserLogin.getText().isEmpty()) {
-                connectToServer("LOGIN " + txtUserLogin.getText() + "|" + new String(txtPassLogin.getPassword()), txtUserLogin.getText());
+            String u = txtUserLogin.getText().trim();
+            String p = new String(txtPassLogin.getPassword());
+            if(!u.isEmpty() && !p.isEmpty()) {
+                connectToServer("LOGIN " + u + "|" + p, u);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Vui lòng nhập tên đăng nhập và mật khẩu!");
             }
         });
 
+        // Xử lý nút Đăng Ký (Đã lấy Email)
         btnRegister.addActionListener(e -> {
-            String u = txtUserReg.getText();
+            String u = txtUserReg.getText().trim();
+            String mail = txtEmailReg.getText().trim();
             String p = new String(txtPassReg.getPassword());
-            if(!u.isEmpty() && !p.isEmpty()) {
-                connectToServer("REGISTER " + u + "|" + p + "|email@gmail.com", u);
+            
+            if(!u.isEmpty() && !p.isEmpty() && !mail.isEmpty()) {
+                // Ghép đúng format REGISTER user|pass|email
+                connectToServer("REGISTER " + u + "|" + p + "|" + mail, u);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Vui lòng điền đầy đủ Tên, Email và Mật khẩu!");
             }
         });
 
@@ -227,7 +249,6 @@ public class ModernChatApp {
         JLabel lblChats = new JLabel("Chats HCD");
         lblChats.setFont(new Font("Segoe UI", Font.BOLD, 22));
         
-        // Đã sửa lại nút dấu + theo yêu cầu (Chỉ text, không nền)
         JButton btnCreateGroup = new JButton("+");
         btnCreateGroup.setToolTipText("Tạo nhóm chat mới");
         btnCreateGroup.setFont(new Font("Segoe UI", Font.PLAIN, 32));
@@ -582,7 +603,6 @@ public class ModernChatApp {
         chatListPanel.repaint();
     }
 
-    // ĐÃ SỬA: Lưu thêm cả thời gian lúc gửi vào file text
     private void saveMessageToHistory(String targetId, String sender, String message, boolean isMe, String timeStr) {
         try {
             File f = new File("history_" + currentUsername + ".txt");
@@ -593,7 +613,6 @@ public class ModernChatApp {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // ĐÃ SỬA: Load chính xác thời gian cũ, không lấy giờ hiện tại nữa
     private void loadHistory() {
         try {
             File f = new File("history_" + currentUsername + ".txt");
@@ -602,14 +621,14 @@ public class ModernChatApp {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split("\\|\\:\\:\\|");
-                if (parts.length >= 5) { // File mới có 5 thông số
+                if (parts.length >= 5) { 
                     String targetId = parts[0];
                     String sender = parts[1];
                     boolean isMe = Boolean.parseBoolean(parts[2]);
                     String timeStr = parts[3];
                     String message = parts[4].replace("\\n", "\n");
                     appendMessageBubble(targetId, sender, message, isMe, false, timeStr);
-                } else if (parts.length == 4) { // File cũ chỉ có 4 thông số (Hỗ trợ tương thích ngược)
+                } else if (parts.length == 4) { 
                     String targetId = parts[0];
                     String sender = parts[1];
                     boolean isMe = Boolean.parseBoolean(parts[2]);
@@ -648,7 +667,6 @@ public class ModernChatApp {
         int textWidth = Math.min(message.length() * 8, 400); 
         txtMsg.setSize(new Dimension(textWidth, Short.MAX_VALUE));
         
-        // Lấy giờ: Nếu không truyền vào giờ cũ thì mới tạo giờ hiện tại
         if (timeStr == null) {
             timeStr = new SimpleDateFormat("HH:mm").format(new Date());
         }
