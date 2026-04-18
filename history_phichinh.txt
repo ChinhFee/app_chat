@@ -1,3 +1,0 @@
-phuongtrinh|::|phuongtrinh|::|false|::|00:00|::|alo alo
-phuongtrinh|::|phichinh|::|true|::|00:00|::|alo alo
-phuongtrinh|::|phichinh|::|true|::|00:31|::|alo alo

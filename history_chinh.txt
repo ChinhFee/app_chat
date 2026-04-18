@@ -1,0 +1,9 @@
+ALL|::|Server|::|false|::|18/04/2026 19:11|::|trinh has joined the chat room.
+trinh|::|trinh|::|false|::|18/04/2026 19:12|::|hello
+trinh|::|trinh|::|false|::|18/04/2026 19:12|::|[FILE]: 1776514358175_black and white dragon.jpg
+ALL|::|Server|::|false|::|18/04/2026 19:13|::|trinh has joined the chat room.
+trinh|::|chinh|::|true|::|18/04/2026 19:13|::|alo alo
+ALL|::|Server|::|false|::|18/04/2026 19:13|::|Private message sent to trinh.
+trinh|::|chinh|::|true|::|18/04/2026 19:13|::|[FILE]: 1776514427015_code_template.c
+ALL|::|Server|::|false|::|18/04/2026 19:13|::|Private message sent to trinh.
+ALL|::|Server|::|false|::|18/04/2026 19:14|::|trinh has left the chat room.
