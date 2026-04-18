@@ -28,3 +28,15 @@ Tem|::|quyen|::|false|::|18/04/2026 17:48|::|hi các bạn
 Tem|::|quyen|::|false|::|18/04/2026 17:48|::|hôm nay chúng ta sẽ code gì đây nhỉ
 Tem|::|dung|::|true|::|18/04/2026 17:49|::|Chúng ta code Mạng máy tính nhe
 Tem|::|hen|::|false|::|18/04/2026 17:49|::|Nghe hay đó
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|quyen has joined the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|Successfully joined group [team].
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|quyen has left the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:55|::|Successfully joined group [ủ].
+quyen|::|dung|::|true|::|18/04/2026 23:55|::|[FILE]: 1776531348282_chỉnh_cho_mình_202604181256.png
+ALL|::|Server|::|false|::|18/04/2026 23:55|::|User quyen is offline. Sending email notification...
+ALL|::|Server|::|false|::|18/04/2026 23:55|::|Professional email notification sent successfully to quyen!
+ALL|::|Server|::|false|::|18/04/2026 23:56|::|quyen has joined the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:56|::|quyen has left the chat room.
+ALL|::|Server|::|false|::|19/04/2026 00:12|::|trinh has joined the chat room.
+ALL|::|Server|::|false|::|19/04/2026 00:12|::|Successfully joined group [hi].
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|hen has left the chat room.

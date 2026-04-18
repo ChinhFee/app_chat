@@ -86,15 +86,11 @@ public class ModernChatApp {
         frame.setVisible(true);
     }
 
-    // ==========================================
-    // HÀM PHỤ TRỢ: TẠO LOGO 
-    // ==========================================
     private JLabel createLogoLabel() {
         JLabel lblLogo = new JLabel();
         try {
             ImageIcon icon = new ImageIcon("avt.png"); 
             if (icon.getIconWidth() > -1) {
-                // Kích thước Logo 200x200
                 Image img = icon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
                 lblLogo.setIcon(new ImageIcon(img));
             } else {
@@ -109,21 +105,16 @@ public class ModernChatApp {
         return lblLogo;
     }
 
-    // ==========================================
-    // 1. MÀN HÌNH XÁC THỰC
-    // ==========================================
     private JPanel createAuthScreen() {
         JPanel wrapper = new JPanel(new GridBagLayout());
         wrapper.setBackground(new Color(243, 246, 253));
 
         JPanel authBox = new JPanel(new CardLayout());
-        // Thu gọn chiều cao về 560 vì Logo đã được đưa ra ngoài
         authBox.setPreferredSize(new Dimension(420, 560)); 
         authBox.putClientProperty("FlatLaf.style", "arc: 35");
         authBox.setBackground(Color.WHITE);
         authBox.setBorder(new EmptyBorder(20, 40, 20, 40));
 
-        // --- PANEL ĐĂNG NHẬP ---
         JPanel loginPanel = new JPanel();
         loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
         loginPanel.setOpaque(false);
@@ -159,7 +150,6 @@ public class ModernChatApp {
         btnGoToReg.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnGoToReg.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Khôi phục lại khoảng cách cho Panel Đăng nhập
         loginPanel.add(Box.createVerticalStrut(40));
         loginPanel.add(lblLoginTitle);
         loginPanel.add(Box.createVerticalStrut(45));
@@ -171,7 +161,6 @@ public class ModernChatApp {
         loginPanel.add(Box.createVerticalStrut(10));
         loginPanel.add(btnGoToReg);
 
-        // --- PANEL ĐĂNG KÝ ---
         JPanel regPanel = new JPanel();
         regPanel.setLayout(new BoxLayout(regPanel, BoxLayout.Y_AXIS));
         regPanel.setOpaque(false);
@@ -212,7 +201,6 @@ public class ModernChatApp {
         btnBackToLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnBackToLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Khôi phục lại khoảng cách cho Panel Đăng ký
         regPanel.add(Box.createVerticalStrut(20));
         regPanel.add(lblRegTitle);
         regPanel.add(Box.createVerticalStrut(35));
@@ -420,7 +408,6 @@ public class ModernChatApp {
         btnSend.setForeground(Color.WHITE);
         btnSend.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        // ==== XỬ LÝ CHỌN VÀ GỬI FILE ====
         btnAttach.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
@@ -726,7 +713,7 @@ public class ModernChatApp {
     }
 
     // ==========================================
-    // HÀM [CẬP NHẬT] ĐỂ SỬA LỖI ĐỎ: Tạo màu Avatar
+    // HÀM [CẬP NHẬT] KHÔI PHỤC TẠO MÀU AVATAR 
     // ==========================================
     private Color getColorForName(String name) {
         if(name == null) return Color.GRAY;
@@ -869,10 +856,6 @@ public class ModernChatApp {
         }
     }
 
-    // ==========================================
-    // KHỐI UDP ĐÃ THÊM @SuppressWarnings("deprecation") 
-    // ĐỂ ẨN CẢNH BÁO MÀU VÀNG CỦA JAVA 14+
-    // ==========================================
     @SuppressWarnings("deprecation")
     private void joinMulticastGroup(String ip, int port, String groupName) {
         try {
@@ -881,7 +864,6 @@ public class ModernChatApp {
             InetAddress address = InetAddress.getByName(ip);
             MulticastSocket mSocket = new MulticastSocket(port);
             
-            // Lệnh này bị báo vàng ở Java 14 nhưng vẫn chạy tốt và tương thích chuẩn ngược
             mSocket.joinGroup(address);
             
             groupSockets.put(groupName, mSocket);
@@ -1187,6 +1169,9 @@ public class ModernChatApp {
         }
     }
 
+    // ==========================================
+    // ĐÃ SỬA TRẬT TỰ CÁC LỆNH IF...ELSE ĐỂ KHÔNG BỊ "NUỐT" TIN NHẮN SERVER NỮA
+    // ==========================================
     private void startListenerThread() {
         Thread listener = new Thread(() -> {
             try {
@@ -1206,7 +1191,8 @@ public class ModernChatApp {
                             outToServer.println("GET_ONLINE_USERS"); 
                             loadHistory();
                         });
-                    } else if (res.startsWith("MESSAGE Login successful!")) {
+                    } 
+                    else if (res.startsWith("MESSAGE Login successful!")) {
                         SwingUtilities.invokeLater(() -> {
                             if (pendingUsername != null) {
                                 currentUsername = pendingUsername;
@@ -1218,7 +1204,27 @@ public class ModernChatApp {
                             outToServer.println("GET_ONLINE_USERS"); 
                             loadHistory(); 
                         });
-                    } else if (res.startsWith("MESSAGE ")) {
+                    } 
+                    else if (res.startsWith("MESSAGE Registration successful!")) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(frame, "Đăng ký thành công! Hãy đăng nhập."));
+                    }
+                    else if (res.startsWith("MESSAGE Successfully joined group [")) {
+                        try {
+                            String gName = res.substring(35, res.length() - 2);
+                            if (pendingMulticastIp != null) {
+                                String ip = pendingMulticastIp;
+                                int port = pendingMulticastPort;
+                                pendingMulticastIp = null;
+                                SwingUtilities.invokeLater(() -> {
+                                    joinMulticastGroup(ip, port, gName);
+                                });
+                            }
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    // THẰNG NÀY PHẢI NẰM SAU CÙNG CỦA CÁC ĐIỀU KIỆN "MESSAGE..." BÊN TRÊN
+                    else if (res.startsWith("MESSAGE ")) {
                         String text = res.substring(8).trim();
                         SwingUtilities.invokeLater(() -> {
                             if (!"CHAT".equals(currentCard)) {
@@ -1227,9 +1233,7 @@ public class ModernChatApp {
                                 appendMessageBubble("ALL", "Server", text, false, true, null);
                             }
                         });
-                    } else if (res.startsWith("MESSAGE Registration successful!")) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(frame, "Đăng ký thành công! Hãy đăng nhập."));
-                    }
+                    } 
                     else if (res.startsWith("ONLINE_LIST ")) {
                         SwingUtilities.invokeLater(() -> {
                             String[] users = res.substring(12).split(",");
@@ -1291,21 +1295,6 @@ public class ModernChatApp {
                         if (parts.length >= 3) {
                             pendingMulticastIp = parts[1];
                             pendingMulticastPort = Integer.parseInt(parts[2]);
-                        }
-                    }
-                    else if (res.startsWith("MESSAGE Successfully joined group [")) {
-                        try {
-                            String gName = res.substring(35, res.length() - 2);
-                            if (pendingMulticastIp != null) {
-                                String ip = pendingMulticastIp;
-                                int port = pendingMulticastPort;
-                                pendingMulticastIp = null;
-                                SwingUtilities.invokeLater(() -> {
-                                    joinMulticastGroup(ip, port, gName);
-                                });
-                            }
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
                         }
                     }
                 }

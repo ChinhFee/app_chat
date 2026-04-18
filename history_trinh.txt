@@ -6,3 +6,20 @@ chinh|::|chinh|::|false|::|18/04/2026 19:13|::|alo alo
 chinh|::|chinh|::|false|::|18/04/2026 19:13|::|[FILE]: 1776514427015_code_template.c
 chinh|::|chinh|::|false|::|18/04/2026 19:27|::|[FILE]: 1776515222256_code_template.h
 chinh|::|chinh|::|false|::|18/04/2026 19:27|::|[FILE]: 1776515231321_download.jpg
+ALL|::|Server|::|false|::|19/04/2026 00:12|::|Private message sent to hen.
+ALL|::|Server|::|false|::|19/04/2026 00:12|::|Private message sent to dung.
+hi|::|trinh|::|true|::|19/04/2026 00:13|::|hi
+chinh|::|trinh|::|true|::|19/04/2026 00:13|::|[FILE]: 1776532393113_7b79bd28-289d-44b7-b5de-11ed379efe0f.png
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|User chinh is offline. Sending email notification...
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|Professional email notification sent successfully to chinh!
+chinh|::|trinh|::|true|::|19/04/2026 00:13|::|[FILE]: 1776532401499_chỉnh_cho_mình_202604181256.png
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|User chinh is offline. Sending email notification...
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|Professional email notification sent successfully to chinh!
+chinh|::|trinh|::|true|::|19/04/2026 00:13|::|[FILE]: 1776532417937_CV_VO TA DUNG.png
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|User chinh is offline. Sending email notification...
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|Professional email notification sent successfully to chinh!
+chinh|::|trinh|::|true|::|19/04/2026 00:13|::|[FILE]: 1776532426492_Detai_Nhom18.pdf
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|User chinh is offline. Sending email notification...
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|Professional email notification sent successfully to chinh!
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|hen has left the chat room.
+ALL|::|Server|::|false|::|19/04/2026 00:13|::|dung has left the chat room.

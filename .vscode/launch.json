@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "fileServer",
+            "request": "launch",
+            "mainClass": "fileServer",
+            "projectName": "app_chat_41058dd5"
+        },
+        {
+            "type": "java",
             "name": "chatServer",
             "request": "launch",
             "mainClass": "chatServer",

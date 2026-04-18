@@ -36,3 +36,11 @@ Tem|::|quyen|::|false|::|18/04/2026 17:48|::|hi các bạn
 Tem|::|quyen|::|false|::|18/04/2026 17:48|::|hôm nay chúng ta sẽ code gì đây nhỉ
 Tem|::|dung|::|false|::|18/04/2026 17:49|::|Chúng ta code Mạng máy tính nhe
 Tem|::|hen|::|true|::|18/04/2026 17:49|::|Nghe hay đó
+ALL|::|Server|::|false|::|18/04/2026 23:52|::|dung has joined the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|quyen has joined the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|Successfully joined group [team].
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|quyen has left the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:56|::|quyen has joined the chat room.
+ALL|::|Server|::|false|::|18/04/2026 23:56|::|quyen has left the chat room.
+ALL|::|Server|::|false|::|19/04/2026 00:12|::|trinh has joined the chat room.
+ALL|::|Server|::|false|::|19/04/2026 00:12|::|Successfully joined group [hi].

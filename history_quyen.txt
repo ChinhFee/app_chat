@@ -15,3 +15,7 @@ Tem|::|quyen|::|true|::|18/04/2026 17:48|::|hi các bạn
 Tem|::|quyen|::|true|::|18/04/2026 17:48|::|hôm nay chúng ta sẽ code gì đây nhỉ
 Tem|::|dung|::|false|::|18/04/2026 17:49|::|Chúng ta code Mạng máy tính nhe
 Tem|::|hen|::|false|::|18/04/2026 17:49|::|Nghe hay đó
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|Successfully joined group [team].
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|Private message sent to hen.
+ALL|::|Server|::|false|::|18/04/2026 23:53|::|Private message sent to dung.
+dung|::|dung|::|false|::|18/04/2026 23:56|::|[FILE]: 1776531348282_chỉnh_cho_mình_202604181256.png
