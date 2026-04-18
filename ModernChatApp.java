@@ -4,6 +4,9 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -45,6 +48,13 @@ public class ModernChatApp {
     private HashMap<String, JLabel> statusLabelsMap = new HashMap<>(); 
     
     private HashMap<String, String> lastDateMap = new HashMap<>(); 
+    
+    // Mạng UDP Multicast (Dành riêng cho Group Chat)
+    private String pendingMulticastIp = null;
+    private int pendingMulticastPort = 8888;
+    private HashMap<String, MulticastSocket> groupSockets = new HashMap<>();
+    private HashMap<String, InetAddress> groupAddresses = new HashMap<>();
+    private HashMap<String, Integer> groupPorts = new HashMap<>();
 
     private static final Color[] AVATAR_COLORS = {
         new Color(239, 68, 68), new Color(249, 115, 22), new Color(16, 185, 129), 
@@ -243,16 +253,13 @@ public class ModernChatApp {
             }
         });
 
-        // BỐ TRÍ LOGO VÀ KHUNG TRẮNG LÊN NỀN XANH
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         
-        // 1. Thêm Logo lên trên cùng (Y = 0)
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 20, 0); // Khoảng cách 20px bên dưới Logo
+        gbc.insets = new Insets(0, 0, 20, 0); 
         wrapper.add(createLogoLabel(), gbc);
         
-        // 2. Thêm Khung Form Đăng nhập xuống dưới (Y = 1)
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 0, 0);
         wrapper.add(authBox, gbc);
@@ -260,22 +267,17 @@ public class ModernChatApp {
         return wrapper;
     }
 
-    // ==========================================
-    // 2. GIAO DIỆN CHAT CHÍNH
-    // ==========================================
     private JPanel createMainWorkspace() {
         JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
         mainPanel.setBackground(new Color(243, 246, 253));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // --- CỘT TRÁI (SIDEBAR) ---
         JPanel sidebar = new JPanel(new BorderLayout());
         sidebar.setPreferredSize(new Dimension(320, 0));
         sidebar.setBackground(new Color(250, 250, 252));
         sidebar.putClientProperty("FlatLaf.style", "arc: 20");
         sidebar.setBorder(new EmptyBorder(20, 15, 20, 15));
 
-        // 2.1 Header Sidebar
         JPanel sidebarHeader = new JPanel(new BorderLayout(0, 15));
         sidebarHeader.setOpaque(false);
         
@@ -318,11 +320,9 @@ public class ModernChatApp {
         
         sidebar.add(sidebarHeader, BorderLayout.NORTH);
 
-        // 2.2 Khu vực hiển thị danh sách
         JPanel sidebarContent = new JPanel(new BorderLayout());
         sidebarContent.setOpaque(false);
 
-        // Hàng Avatar Online 
         JPanel onlineWrapper = new JPanel(new BorderLayout());
         onlineWrapper.setOpaque(false);
         onlineWrapper.setBorder(new EmptyBorder(15, 0, 10, 0));
@@ -342,7 +342,6 @@ public class ModernChatApp {
         onlineWrapper.add(onlineScroll, BorderLayout.CENTER);
         sidebarContent.add(onlineWrapper, BorderLayout.NORTH);
 
-        // Danh sách Chat Dọc 
         JPanel chatListWrapper = new JPanel(new BorderLayout());
         chatListWrapper.setOpaque(false);
         chatListPanel = new JPanel();
@@ -359,12 +358,10 @@ public class ModernChatApp {
         sidebarContent.add(chatListScroll, BorderLayout.CENTER);
         sidebar.add(sidebarContent, BorderLayout.CENTER);
 
-        // --- CỘT PHẢI (KHU VỰC NHẮN TIN CHÍNH) ---
         JPanel chatArea = new JPanel(new BorderLayout());
         chatArea.setBackground(Color.WHITE);
         chatArea.putClientProperty("FlatLaf.style", "arc: 20");
 
-        // 2.3 Header Khung Chat
         JPanel chatHeader = new JPanel(new BorderLayout());
         chatHeader.setOpaque(false);
         chatHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
@@ -388,14 +385,12 @@ public class ModernChatApp {
         chatHeader.add(headerInfo, BorderLayout.WEST);
         chatArea.add(chatHeader, BorderLayout.NORTH);
 
-        // 2.4 Nội dung Chat
         chatScrollPane = new JScrollPane(); 
         chatScrollPane.setBorder(null);
         chatScrollPane.getVerticalScrollBar().setUnitIncrement(16);
         chatScrollPane.setViewportView(getOrCreateChatPanel("ALL")); 
         chatArea.add(chatScrollPane, BorderLayout.CENTER);
 
-        // 2.5 Thanh Nhập Liệu
         JPanel inputWrapper = new JPanel(new BorderLayout());
         inputWrapper.setOpaque(false);
         inputWrapper.setBorder(new EmptyBorder(15, 20, 20, 20));
@@ -423,27 +418,32 @@ public class ModernChatApp {
         btnSend.setForeground(Color.WHITE);
         btnSend.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        // ==== XỬ LÝ CHỌN VÀ GỬI FILE MỚI ====
+        // ==== XỬ LÝ CHỌN VÀ GỬI FILE ====
         btnAttach.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 try {
-                    // Tạo một cái tên duy nhất để gửi lên Server
                     String uniqueName = System.currentTimeMillis() + "_" + file.getName();
-                    
-                    // Gửi file vật lý lên FileServer
                     fileClient.sendFile("localhost", 1988, file.getAbsolutePath(), uniqueName);
                     
-                    // Gửi thông báo [FILE] qua Chat Server
                     String fileMsg = "[FILE]: " + uniqueName;
-                    if (currentChatTarget.equals("ALL")) {
+
+                    if (groupSockets.containsKey(currentChatTarget)) {
+                        String formattedMsg = currentUsername + ": " + fileMsg;
+                        byte[] sendData = formattedMsg.getBytes("UTF-8");
+                        DatagramPacket sendPacket = new DatagramPacket(
+                            sendData, sendData.length, 
+                            groupAddresses.get(currentChatTarget), 
+                            groupPorts.get(currentChatTarget)
+                        );
+                        groupSockets.get(currentChatTarget).send(sendPacket);
+                    } else if (currentChatTarget.equals("ALL")) {
                         outToServer.println("CHATALL " + fileMsg);
                     } else {
                         outToServer.println("CHATPRIVATE " + currentChatTarget + "|" + fileMsg);
                     }
 
-                    // Hiển thị ngay lên màn hình của mình
                     appendMessageBubble(currentChatTarget, currentUsername, fileMsg, true, true, null);
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Lỗi gửi file: Hãy chắc chắn File Server đang chạy!");
@@ -455,12 +455,35 @@ public class ModernChatApp {
         btnSend.addActionListener(e -> {
             String msg = txtMessage.getText().trim();
             if (!msg.isEmpty()) {
-                if (currentChatTarget.equals("ALL")) {
+                
+                if (msg.startsWith("JOINGROUP ")) {
+                    outToServer.println(msg);
+                    txtMessage.setText("");
+                    return;
+                }
+
+                if (groupSockets.containsKey(currentChatTarget)) {
+                    try {
+                        String formattedMsg = currentUsername + ": " + msg;
+                        byte[] sendData = formattedMsg.getBytes("UTF-8");
+                        DatagramPacket sendPacket = new DatagramPacket(
+                            sendData, sendData.length, 
+                            groupAddresses.get(currentChatTarget), 
+                            groupPorts.get(currentChatTarget)
+                        );
+                        groupSockets.get(currentChatTarget).send(sendPacket);
+                        
+                        appendMessageBubble(currentChatTarget, currentUsername, msg, true, true, null);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                } else if (currentChatTarget.equals("ALL")) {
                     outToServer.println("CHATALL " + msg);
+                    appendMessageBubble(currentChatTarget, currentUsername, msg, true, true, null);
                 } else {
                     outToServer.println("CHATPRIVATE " + currentChatTarget + "|" + msg);
+                    appendMessageBubble(currentChatTarget, currentUsername, msg, true, true, null);
                 }
-                appendMessageBubble(currentChatTarget, currentUsername, msg, true, true, null);
                 txtMessage.setText("");
             }
         });
@@ -478,9 +501,6 @@ public class ModernChatApp {
         return mainPanel;
     }
 
-    // ==========================================
-    // POPUP TẠO NHÓM CHAT ĐẸP
-    // ==========================================
     private void showCreateGroupPopup() {
         JDialog dialog = new JDialog(frame, "Tạo Nhóm Chat", true);
         dialog.setSize(400, 500);
@@ -554,7 +574,7 @@ public class ModernChatApp {
             
             for (String u : checkboxes.keySet()) {
                 if (checkboxes.get(u).isSelected()) {
-                    outToServer.println("CHATPRIVATE " + u + "|Tôi đã tạo nhóm [" + gName + "]. Hãy gõ lệnh JOINGROUP " + gName + " để tham gia nhé!");
+                    outToServer.println("CHATPRIVATE " + u + "|[INVITE]:" + gName);
                 }
             }
             dialog.dispose();
@@ -572,9 +592,6 @@ public class ModernChatApp {
         dialog.setVisible(true);
     }
 
-    // ==========================================
-    // POPUP CHỈNH SỬA THÔNG TIN CÁ NHÂN (PROFILE) 
-    // ==========================================
     private void showEditProfilePopup() {
         JDialog dialog = new JDialog(frame, "Cài Đặt Tài Khoản", true);
         dialog.setSize(380, 500); 
@@ -586,14 +603,12 @@ public class ModernChatApp {
         content.setBackground(Color.WHITE);
         content.setBorder(new EmptyBorder(25, 40, 25, 40));
 
-        // 1. Header Avatar 
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel lblBigAvt = new JLabel(new AvatarIcon(currentUsername, 75, getColorForName(currentUsername)));
         headerPanel.add(lblBigAvt);
         
-        // --- HỘP TÀNG HÌNH: Ép Label sát viền trái ---
         JPanel pnlName = new JPanel(new BorderLayout());
         pnlName.setOpaque(false);
         pnlName.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25)); 
@@ -610,7 +625,6 @@ public class ModernChatApp {
         txtName.setBackground(new Color(245, 245, 245));
         txtName.setToolTipText("Tên đăng nhập được sử dụng làm mã định danh trên hệ thống nên không thể thay đổi.");
 
-        // --- HỘP TÀNG HÌNH CHO MẬT KHẨU ---
         JPanel pnlPass = new JPanel(new BorderLayout());
         pnlPass.setOpaque(false);
         pnlPass.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
@@ -624,7 +638,6 @@ public class ModernChatApp {
         txtPass.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         txtPass.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // --- HỘP TÀNG HÌNH CHO EMAIL ---
         JPanel pnlEmail = new JPanel(new BorderLayout());
         pnlEmail.setOpaque(false);
         pnlEmail.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
@@ -638,7 +651,6 @@ public class ModernChatApp {
         txtEmail.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         txtEmail.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Nút Lưu thay đổi
         JButton btnSave = new JButton("Lưu Thay Đổi");
         btnSave.setBackground(new Color(16, 185, 129));
         btnSave.setForeground(Color.WHITE);
@@ -665,7 +677,6 @@ public class ModernChatApp {
             dialog.dispose();
         });
 
-        // Ghép mọi thứ vào Form chính
         content.add(headerPanel);
         content.add(Box.createVerticalStrut(15));
         content.add(pnlName); 
@@ -686,10 +697,6 @@ public class ModernChatApp {
         dialog.setVisible(true);
     }
 
-
-    // ==========================================
-    // QUẢN LÝ TRẠNG THÁI ONLINE VÀ ĐỊNH TUYẾN CHAT
-    // ==========================================
     private void updateUserStatus(String username, boolean isOnline) {
         String statusText = isOnline ? "Đang hoạt động" : "Ngoại tuyến";
         Color statusColor = isOnline ? new Color(16, 163, 127) : new Color(150, 150, 150);
@@ -714,6 +721,16 @@ public class ModernChatApp {
             chatPanelsMap.put(targetId, newPanel);
         }
         return chatPanelsMap.get(targetId);
+    }
+
+    // ==========================================
+    // HÀM [CẬP NHẬT] ĐỂ SỬA LỖI ĐỎ: Tạo màu Avatar
+    // ==========================================
+    private Color getColorForName(String name) {
+        if(name == null) return Color.GRAY;
+        if(name.equals("ALL")) return new Color(79, 70, 229); 
+        int hash = Math.abs(name.hashCode());
+        return AVATAR_COLORS[hash % AVATAR_COLORS.length];
     }
 
     private void addActiveChat(String targetId, String name, String forceStatus) {
@@ -755,6 +772,9 @@ public class ModernChatApp {
                 
                 if (targetId.equals("ALL")) {
                     lblChatStatus.setText("Public Channel");
+                    lblChatStatus.setForeground(new Color(16, 163, 127));
+                } else if (groupSockets.containsKey(targetId)) {
+                    lblChatStatus.setText("Nhóm Chat (Multicast)");
                     lblChatStatus.setForeground(new Color(16, 163, 127));
                 } else {
                     boolean currentlyOnline = onlineUsers.contains(targetId);
@@ -821,14 +841,12 @@ public class ModernChatApp {
         }
     }
 
-    // ==== HÀM PHỤ TRỢ MỞ/TẢI FILE TỪ SERVER CỤC BỘ ====
     private void downloadOrOpenFile(File sourceFile, String fileName) {
         if (!sourceFile.exists()) {
             JOptionPane.showMessageDialog(frame, "Lỗi: File không còn tồn tại trên Server!");
             return;
         }
         
-        // Lấy tên gốc để làm tên đề xuất khi tải (bỏ qua đoạn số timestamp)
         String realName = fileName.contains("_") ? fileName.substring(fileName.indexOf("_") + 1) : fileName;
         
         JFileChooser chooser = new JFileChooser();
@@ -838,9 +856,7 @@ public class ModernChatApp {
         if (chooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
             File destFile = chooser.getSelectedFile();
             try {
-                // Copy từ thư mục server_files ra máy người dùng
                 Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                
                 int open = JOptionPane.showConfirmDialog(frame, "Đã tải xong! Bạn có muốn mở file lên xem không?", "Tải thành công", JOptionPane.YES_NO_OPTION);
                 if (open == JOptionPane.YES_OPTION) {
                     Desktop.getDesktop().open(destFile);
@@ -852,8 +868,64 @@ public class ModernChatApp {
     }
 
     // ==========================================
-    // KHỐI VẼ BONG BÓNG CHAT VÀ ĐỊNH TUYẾN
+    // KHỐI UDP ĐÃ THÊM @SuppressWarnings("deprecation") 
+    // ĐỂ ẨN CẢNH BÁO MÀU VÀNG CỦA JAVA 14+
     // ==========================================
+    @SuppressWarnings("deprecation")
+    private void joinMulticastGroup(String ip, int port, String groupName) {
+        try {
+            if (groupSockets.containsKey(groupName)) return;
+
+            InetAddress address = InetAddress.getByName(ip);
+            MulticastSocket mSocket = new MulticastSocket(port);
+            
+            // Lệnh này bị báo vàng ở Java 14 nhưng vẫn chạy tốt và tương thích chuẩn ngược
+            mSocket.joinGroup(address);
+            
+            groupSockets.put(groupName, mSocket);
+            groupAddresses.put(groupName, address);
+            groupPorts.put(groupName, port);
+            
+            addActiveChat(groupName, groupName, "Nhóm Chat (Multicast)");
+            
+            currentChatTarget = groupName;
+            lblChatName.setText(groupName);
+            lblChatAvatar.setIcon(new AvatarIcon(groupName, 45, getColorForName(groupName)));
+            lblChatStatus.setText("Nhóm Chat (Multicast)");
+            lblChatStatus.setForeground(new Color(16, 163, 127));
+            chatScrollPane.setViewportView(getOrCreateChatPanel(groupName));
+            
+            Thread receiver = new Thread(() -> {
+                byte[] buf = new byte[4096];
+                while (true) {
+                    try {
+                        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                        mSocket.receive(packet);
+                        String msg = new String(buf, 0, packet.getLength(), "UTF-8");
+                        
+                        String[] parts = msg.split(": ", 2);
+                        if (parts.length == 2) {
+                            String sender = parts[0];
+                            String content = parts[1];
+                            if (!sender.equals(currentUsername)) {
+                                SwingUtilities.invokeLater(() -> {
+                                    appendMessageBubble(groupName, sender, content, false, true, null);
+                                });
+                            }
+                        }
+                    } catch (IOException e) {
+                        break;
+                    }
+                }
+            });
+            receiver.start();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Lỗi tham gia nhóm UDP: " + e.getMessage());
+        }
+    }
+
     private void appendMessageBubble(String targetId, String sender, String message, boolean isMe, boolean saveToFile, String timeStr) {
         JPanel targetPanel = getOrCreateChatPanel(targetId);
         
@@ -904,9 +976,7 @@ public class ModernChatApp {
         JLabel lblAvt = new JLabel(new AvatarIcon(sender, 40, getColorForName(sender)));
         lblAvt.setVerticalAlignment(SwingConstants.BOTTOM);
 
-        // Biến lưu trữ khung hiển thị nội dung (chữ, hình hoặc nút file)
         Component messageContentComp;
-        
         boolean isFile = message.startsWith("[FILE]: ");
 
         if (isFile) {
@@ -914,7 +984,6 @@ public class ModernChatApp {
             File f = new File("server_files/" + fileName);
             String lowerName = fileName.toLowerCase();
 
-            // Nếu là file Ảnh -> Hiển thị trực tiếp vào bong bóng
             if (lowerName.endsWith(".jpg") || lowerName.endsWith(".png") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif")) {
                 JLabel imgLabel = new JLabel();
                 if (f.exists()) {
@@ -922,7 +991,6 @@ public class ModernChatApp {
                     int width = icon.getIconWidth();
                     int height = icon.getIconHeight();
                     
-                    // Thu nhỏ ảnh nếu kích thước quá lớn
                     if (width > 200) {
                         height = (int) (height * (200.0 / width));
                         width = 200;
@@ -939,7 +1007,6 @@ public class ModernChatApp {
                 
                 imgLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 imgLabel.setToolTipText("Nhấn để xem / Tải về");
-                // Bấm vào ảnh cũng tải về
                 imgLabel.addMouseListener(new MouseAdapter() {
                     public void mouseClicked(MouseEvent e) {
                         downloadOrOpenFile(f, fileName);
@@ -948,7 +1015,6 @@ public class ModernChatApp {
                 messageContentComp = imgLabel;
                 
             } else {
-                // Nếu là file khác -> Hiển thị dạng nút bấm
                 String realName = fileName.contains("_") ? fileName.substring(fileName.indexOf("_") + 1) : fileName;
                 JButton fileBtn = new JButton("📄 " + realName);
                 fileBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -956,7 +1022,7 @@ public class ModernChatApp {
                 fileBtn.setFocusPainted(false);
                 
                 if (isMe) {
-                    fileBtn.setBackground(new Color(255, 255, 255, 80)); // Nút mờ đi một chút trên nền xanh
+                    fileBtn.setBackground(new Color(255, 255, 255, 80));
                     fileBtn.setForeground(Color.WHITE);
                 } else {
                     fileBtn.setBackground(Color.WHITE);
@@ -969,7 +1035,6 @@ public class ModernChatApp {
             }
             
         } else {
-            // Xử lý chat Text bình thường
             String textToShow = message.startsWith("[Đã đính kèm tệp]: ") ? "File: " + message.substring(20) : message;
             JTextArea txtMsg = new JTextArea(textToShow);
             txtMsg.setWrapStyleWord(true);
@@ -987,7 +1052,6 @@ public class ModernChatApp {
             messageContentComp = txtMsg;
         }
 
-        // Bọc vào bong bóng chat
         BubblePanel bubble = new BubblePanel(isMe ? new Color(0, 132, 255) : new Color(228, 230, 235));
         bubble.setLayout(new BorderLayout());
         bubble.setBorder(new EmptyBorder(10, 15, 10, 15));
@@ -1049,16 +1113,6 @@ public class ModernChatApp {
         }
     }
 
-    // ==========================================
-    // CÁC HÀM PHỤ TRỢ MẠNG LƯỚI
-    // ==========================================
-    private Color getColorForName(String name) {
-        if(name.equals("ALL")) return new Color(79, 70, 229); 
-        int hash = Math.abs(name.hashCode());
-        return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-    }
-
-    
     private void addOnlineUser(String username) {
         for (Component c : onlineUsersPanel.getComponents()) {
             if (c.getName() != null && c.getName().equals(username)) return;
@@ -1193,9 +1247,39 @@ public class ModernChatApp {
                             String[] splitMsg = res.split(":", 2);
                             if (splitMsg.length == 2) {
                                 String rawSender = splitMsg[0].replace("PRIVATE từ ", "").trim();
-                                appendMessageBubble(rawSender, rawSender, splitMsg[1].trim(), false, true, null);
+                                String content = splitMsg[1].trim();
+                                
+                                if (content.startsWith("[INVITE]:")) {
+                                    String groupName = content.substring(9).trim();
+                                    outToServer.println("JOINGROUP " + groupName);
+                                    System.out.println("Hệ thống: Bạn đã được tự động thêm vào nhóm " + groupName + " do " + rawSender + " mời.");
+                                } else {
+                                    appendMessageBubble(rawSender, rawSender, content, false, true, null);
+                                }
                             }
                         });
+                    }
+                    else if (res.startsWith("MULTICAST_JOIN ")) {
+                        String[] parts = res.split(" ");
+                        if (parts.length >= 3) {
+                            pendingMulticastIp = parts[1];
+                            pendingMulticastPort = Integer.parseInt(parts[2]);
+                        }
+                    }
+                    else if (res.startsWith("MESSAGE Successfully joined group [")) {
+                        try {
+                            String gName = res.substring(35, res.length() - 2);
+                            if (pendingMulticastIp != null) {
+                                String ip = pendingMulticastIp;
+                                int port = pendingMulticastPort;
+                                pendingMulticastIp = null;
+                                SwingUtilities.invokeLater(() -> {
+                                    joinMulticastGroup(ip, port, gName);
+                                });
+                            }
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -1206,9 +1290,6 @@ public class ModernChatApp {
         listener.start();
     }
 
-    // ==========================================
-    // CÁC COMPONENT TỰ VẼ ĐỒ HỌA 
-    // ==========================================
     class BubblePanel extends JPanel {
         private Color bgColor;
         public BubblePanel(Color bgColor) {

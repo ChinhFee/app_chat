@@ -4,3 +4,14 @@ dung|::|quyen|::|true|::|15:32|::|cau dau roi
 dung|::|quyen|::|true|::|10:39|::|helu
 dung|::|quyen|::|true|::|10:46|::|caudauroi
 dung|::|dung|::|false|::|11:12|::|hú hú
+dung|::|dung|::|false|::|18/04/2026 17:27|::|lủ lu
+dung|::|dung|::|false|::|18/04/2026 17:27|::|hi
+dung|::|dung|::|false|::|18/04/2026 17:27|::|lmk
+dung|::|dung|::|false|::|18/04/2026 17:27|::|hum
+dung|::|dung|::|false|::|18/04/2026 17:27|::|omg
+Tem|::|hen|::|false|::|18/04/2026 17:48|::|hi
+Tem|::|dung|::|false|::|18/04/2026 17:48|::|helo
+Tem|::|quyen|::|true|::|18/04/2026 17:48|::|hi các bạn
+Tem|::|quyen|::|true|::|18/04/2026 17:48|::|hôm nay chúng ta sẽ code gì đây nhỉ
+Tem|::|dung|::|false|::|18/04/2026 17:49|::|Chúng ta code Mạng máy tính nhe
+Tem|::|hen|::|false|::|18/04/2026 17:49|::|Nghe hay đó

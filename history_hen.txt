@@ -27,3 +27,12 @@ dung|::|hen|::|true|::|18/04/2026 13:27|::|hi
 dung|::|dung|::|false|::|18/04/2026 13:41|::|[Đã đính kèm tệp]: app.png
 dung|::|hen|::|true|::|18/04/2026 13:59|::|[FILE]: 1776495587588_app.png
 dung|::|hen|::|true|::|18/04/2026 14:01|::|[FILE]: 1776495672238_CV_VO TA DUNG.png
+quyen|::|quyen|::|false|::|18/04/2026 17:28|::|Tôi đã tạo nhóm [Team back]. Hãy gõ lệnh JOINGROUP Team back để tham gia nhé!
+quyen|::|quyen|::|false|::|18/04/2026 17:29|::|Tôi đã tạo nhóm [team back]. Hãy gõ lệnh JOINGROUP team back để tham gia nhé!
+quyen|::|quyen|::|false|::|18/04/2026 17:42|::|Tôi đã tạo nhóm [ủ]. Hãy gõ lệnh JOINGROUP ủ để tham gia nhé!
+Tem|::|hen|::|true|::|18/04/2026 17:48|::|hi
+Tem|::|dung|::|false|::|18/04/2026 17:48|::|helo
+Tem|::|quyen|::|false|::|18/04/2026 17:48|::|hi các bạn
+Tem|::|quyen|::|false|::|18/04/2026 17:48|::|hôm nay chúng ta sẽ code gì đây nhỉ
+Tem|::|dung|::|false|::|18/04/2026 17:49|::|Chúng ta code Mạng máy tính nhe
+Tem|::|hen|::|true|::|18/04/2026 17:49|::|Nghe hay đó
