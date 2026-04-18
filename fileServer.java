@@ -14,6 +14,10 @@ import java.net.Socket;
 
 public class fileServer extends Thread {
   private ServerSocket ss;
+  private static final int MAX_CONCURRENT_TRANSFERS = 10;
+  private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
+  private static final long MIN_DISK_SPACE = 100 * 1024 * 1024;
+  private static java.util.concurrent.Semaphore transferSemaphore = new java.util.concurrent.Semaphore(MAX_CONCURRENT_TRANSFERS);
 
   public fileServer(int port) {
     try {
@@ -30,14 +34,20 @@ public class fileServer extends Thread {
       try {
         Socket clientSock = ss.accept();
 
-        // [CẬP NHẬT]: Mở luồng mới cho mỗi file để không làm treo Server khi nhận file nặng
-        new Thread(() -> {
-            try {
-                saveFile(clientSock);
-            } catch (IOException e) {
-                System.err.println("File transfer error: " + e.getMessage());
-            }
-        }).start();
+        if (transferSemaphore.tryAcquire()) {
+          new Thread(() -> {
+              try {
+                  saveFile(clientSock);
+              } catch (IOException e) {
+                  System.err.println("File transfer error: " + e.getMessage());
+              } finally {
+                  transferSemaphore.release();
+              }
+          }).start();
+        } else {
+          System.err.println("Server quá tải, từ chối kết nối từ: " + clientSock.getRemoteSocketAddress());
+          clientSock.close();
+        }
 
       } catch (Exception e) {
         System.err.println("FileServer accept error: " + e.getMessage());
@@ -48,37 +58,59 @@ public class fileServer extends Thread {
 
   private void saveFile(Socket clientSock) throws IOException {
     DataInputStream dis = new DataInputStream(clientSock.getInputStream());
-
-    // 1. Đọc chính xác Tên và Size do Client quyết định
     String fileName = dis.readUTF();
     long fileSize = dis.readLong();
 
-    // 2. Tạo thư mục lưu trữ riêng trên Server
+    if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\") || fileName.startsWith(".")) {
+        dis.close();
+        clientSock.close();
+        return;
+    }
+    if (fileSize > MAX_FILE_SIZE) {
+        dis.close();
+        clientSock.close();
+        return;
+    }
+
     File directory = new File("server_files");
     if (!directory.exists()) {
         directory.mkdirs();
     }
 
-    // 3. Sử dụng đúng tên duy nhất mà Client đã cấp
-    File outputFile = new File(directory, fileName);
-    FileOutputStream fos = new FileOutputStream(outputFile);
-
-    // Sử dụng bộ đệm 4096 byte
-    byte[] buffer = new byte[4096];
-    int read = 0;
-    long remaining = fileSize;
-
-    // Đọc chính xác dung lượng file tránh dính rác
-    while ((read = dis.read(buffer, 0, (int) Math.min(buffer.length, remaining))) > 0) {
-        fos.write(buffer, 0, read);
-        remaining -= read;
+    if (directory.getUsableSpace() < fileSize + MIN_DISK_SPACE) {
+        dis.close();
+        clientSock.close();
+        return;
     }
 
-    fos.close();
-    dis.close();
-    clientSock.close();
+    File outputFile = new File(directory, fileName);
+    if (outputFile.exists()) {
+        String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+        String ext = fileName.substring(fileName.lastIndexOf('.'));
+        String newFileName = baseName + "_" + System.currentTimeMillis() + ext;
+        outputFile = new File(directory, newFileName);
+    }
 
-    System.out.println("Đã nhận và lưu file thành công: " + outputFile.getAbsolutePath());
+    FileOutputStream fos = new FileOutputStream(outputFile);
+    byte[] buffer = new byte[4096];
+    int read = 0;
+    long totalReceived = 0;
+    long remaining = fileSize;
+
+    try {
+        while ((read = dis.read(buffer, 0, (int) Math.min(buffer.length, remaining))) > 0) {
+            fos.write(buffer, 0, read);
+            totalReceived += read;
+            remaining -= read;
+        }
+        fos.close();
+        dis.close();
+        clientSock.close();
+    } catch (IOException e) {
+        fos.close();
+        if (outputFile.exists()) outputFile.delete();
+        throw e;
+    }
   }
 
   public static void main(String[] args) {

@@ -39,7 +39,9 @@ public class ModernChatApp {
     private PrintWriter outToServer;
     private BufferedReader inFromServer;
     private String currentUsername = "Unknown";
-    private String currentChatTarget = "ALL"; 
+    private String currentChatTarget = "ALL";
+    private String currentCard = "AUTH";
+    private String pendingUsername = ""; 
 
     // QUẢN LÝ ĐA HỘP THOẠI VÀ TRẠNG THÁI
     private HashMap<String, JPanel> chatPanelsMap = new HashMap<>();
@@ -1176,8 +1178,7 @@ public class ModernChatApp {
                 inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
                 startListenerThread();
             }
-            currentUsername = user;
-            lblMyProfile.setIcon(new AvatarIcon(user, 45, getColorForName(user)));
+            pendingUsername = user;
             outToServer.println(command);
         } catch (IOException e) {
             System.err.println("Unable to connect to server for user " + user + ": " + e.getMessage());
@@ -1193,14 +1194,40 @@ public class ModernChatApp {
                 while ((response = inFromServer.readLine()) != null) {
                     final String res = response;
                     
-                    if (res.startsWith("MESSAGE Login successful!")) {
+                    if (res.startsWith("LOGIN_SUCCESS ")) {
                         SwingUtilities.invokeLater(() -> {
+                            if (pendingUsername != null) {
+                                currentUsername = pendingUsername;
+                                pendingUsername = null;
+                                lblMyProfile.setIcon(new AvatarIcon(currentUsername, 45, getColorForName(currentUsername)));
+                            }
+                            currentCard = "CHAT";
+                            cardLayout.show(cardPanel, "CHAT");
+                            outToServer.println("GET_ONLINE_USERS"); 
+                            loadHistory();
+                        });
+                    } else if (res.startsWith("MESSAGE Login successful!")) {
+                        SwingUtilities.invokeLater(() -> {
+                            if (pendingUsername != null) {
+                                currentUsername = pendingUsername;
+                                pendingUsername = null;
+                                lblMyProfile.setIcon(new AvatarIcon(currentUsername, 45, getColorForName(currentUsername)));
+                            }
+                            currentCard = "CHAT";
                             cardLayout.show(cardPanel, "CHAT");
                             outToServer.println("GET_ONLINE_USERS"); 
                             loadHistory(); 
                         });
-                    } 
-                    else if (res.startsWith("MESSAGE Registration successful!")) {
+                    } else if (res.startsWith("MESSAGE ")) {
+                        String text = res.substring(8).trim();
+                        SwingUtilities.invokeLater(() -> {
+                            if (!"CHAT".equals(currentCard)) {
+                                JOptionPane.showMessageDialog(frame, text, "Thông báo từ Server", JOptionPane.INFORMATION_MESSAGE);
+                            } else {
+                                appendMessageBubble("ALL", "Server", text, false, true, null);
+                            }
+                        });
+                    } else if (res.startsWith("MESSAGE Registration successful!")) {
                         SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(frame, "Đăng ký thành công! Hãy đăng nhập."));
                     }
                     else if (res.startsWith("ONLINE_LIST ")) {

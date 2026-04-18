@@ -7,3 +7,10 @@ ALL|::|Server|::|false|::|18/04/2026 19:13|::|Private message sent to trinh.
 trinh|::|chinh|::|true|::|18/04/2026 19:13|::|[FILE]: 1776514427015_code_template.c
 ALL|::|Server|::|false|::|18/04/2026 19:13|::|Private message sent to trinh.
 ALL|::|Server|::|false|::|18/04/2026 19:14|::|trinh has left the chat room.
+ALL|::|Server|::|false|::|18/04/2026 19:26|::|chinh has joined the chat room.
+ALL|::|Server|::|false|::|18/04/2026 19:26|::|chinh has left the chat room.
+ALL|::|Server|::|false|::|18/04/2026 19:26|::|trinh has joined the chat room.
+trinh|::|chinh|::|true|::|18/04/2026 19:27|::|[FILE]: 1776515222256_code_template.h
+ALL|::|Server|::|false|::|18/04/2026 19:27|::|Private message sent to trinh.
+trinh|::|chinh|::|true|::|18/04/2026 19:27|::|[FILE]: 1776515231321_download.jpg
+ALL|::|Server|::|false|::|18/04/2026 19:27|::|Private message sent to trinh.

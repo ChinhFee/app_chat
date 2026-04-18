@@ -48,10 +48,6 @@ class clientHandler extends Thread {
       in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
       out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
 
-      out.println("MESSAGE Welcome! There are currently " + chatServer.clientHandlers.size() + " users in the room.");
-      out.println("MESSAGE REGISTER syntax: REGISTER <username>|<password>|<email>");
-      out.println("MESSAGE LOGIN syntax: LOGIN <username>|<password>");
-
       String clientMessage;
 
       while ((clientMessage = in.readLine()) != null) {
@@ -158,6 +154,7 @@ class clientHandler extends Thread {
         username = user;
         isLoggedIn = true;
 
+        out.println("LOGIN_SUCCESS " + username);
         out.println("MESSAGE Login successful! Welcome " + username + ".");
         chatServer.broadcast("MESSAGE " + username + " has joined the chat room.", this);
         chatServer.broadcast("USER_JOINED " + username, this);
