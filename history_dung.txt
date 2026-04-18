@@ -1,4 +1,21 @@
-hen|::|dung|::|true|::|13:38|::|hi
-hen|::|hen|::|false|::|13:38|::|JOINGROUP hi
-quyen|::|dung|::|true|::|15:31|::|hi
-quyen|::|quyen|::|false|::|15:32|::|hú
+hen|::|dung|::|true|::|16/04/2026 13:38|::|hi
+hen|::|hen|::|false|::|16/04/2026 13:38|::|JOINGROUP hi
+quyen|::|dung|::|true|::|16/04/2026 15:31|::|hi
+quyen|::|quyen|::|false|::|16/04/2026 15:32|::|hú
+quyen|::|dung|::|true|::|17/04/2026 10:26|::|hi
+quyen|::|dung|::|true|::|17/04/2026 10:33|::|omg
+ALL|::|dung|::|true|::|17/04/2026 10:37|::|hi
+quyen|::|dung|::|true|::|17/04/2026 10:37|::|he
+quyen|::|dung|::|true|::|17/04/2026 10:45|::|omg
+quyen|::|quyen|::|false|::|17/04/2026 10:46|::|caudauroi
+quyen|::|dung|::|true|::|17/04/2026 11:02|::|hi
+quyen|::|dung|::|true|::|17/04/2026 11:11|::|hú hú
+quyen|::|dung|::|true|::|17/04/2026 11:22|::|lủ lu
+quyen|::|dung|::|true|::|17/04/2026 11:33|::|hi
+quyen|::|dung|::|true|::|11:34|::|lmk
+quyen|::|dung|::|true|::|11:38|::|hum
+quyen|::|dung|::|true|::|18/04/2026 11:48|::|omg
+hen|::|hen|::|false|::|18/04/2026 13:27|::|hi
+hen|::|dung|::|true|::|18/04/2026 13:40|::|[Đã đính kèm tệp]: app.png
+hen|::|hen|::|false|::|18/04/2026 14:00|::|[FILE]: 1776495587588_app.png
+hen|::|hen|::|false|::|18/04/2026 14:01|::|[FILE]: 1776495672238_CV_VO TA DUNG.png

@@ -1,6 +1,6 @@
-hen|123|demo@gmail.com
-ry|123|demo@gmail.com
 dung|123|vodunghlhk@gmail.com
 quyen|123|vodunghlhk@gmail.com
-phichinh|phichinh|hiubeo456@gmail.com
-phuongtrinh|phuongtrinh|suxin2004@gmail.com
+chinh|123|hiubeo456@gmail.com
+trinh|123|suxin2004@gmail.com
+huan|123|huan14112004@gmail.com
+hen|123|vodunghlhk@gmail.com

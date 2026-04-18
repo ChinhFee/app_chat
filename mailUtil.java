@@ -1,100 +1,97 @@
 /*
  * MailUtil.java
  *
- * Lớp tiện ích này cung cấp chức năng email cho ứng dụng trò chuyện.
- * Nó xử lý việc gửi email thông báo cho người dùng khi họ nhận được tin nhắn riêng tư khi ngoại tuyến.
- * Sử dụng JavaMail API với mã hóa SSL/TLS để truyền email an toàn qua Gmail SMTP.
- *
- * Các Tính Năng Chính:
- * - Định cấu hình cài đặt máy chủ SMTP Gmail
- * - Xác thực sử dụng mật khẩu dành riêng cho ứng dụng
- * - Gửi email HTML/văn bản với nội dung tùy chỉnh
- * - Xử lý các lỗi gửi email một cách nhẹ nhàng
- *
- * Lưu Ý Về Bảo Mật: Mật khẩu ứng dụng phải được lưu trữ an toàn, không được mã hóa cứng trong sản xuất.
- *
- * Tác Giả: [Tên của bạn]
- * Ngày: [Ngày Hiện Tại]
+ * Lớp tiện ích cung cấp chức năng gửi thông báo email HTML chuyên nghiệp.
+ * Sử dụng JavaMail API với mã hóa SSL/TLS qua Gmail SMTP.
  */
 
 import java.util.Properties;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.io.UnsupportedEncodingException; // Hỗ trợ hiển thị tên tiếng Việt có dấu
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-/**
- * MailUtil cung cấp các phương thức tĩnh để gửi thông báo email.
- * Nó được sử dụng để thông báo cho người dùng về tin nhắn riêng tư mới khi họ ngoại tuyến.
- */
 public class mailUtil {
-  /**
-   * Tên máy chủ SMTP cho Gmail.
-   */
-  public static final String HOST_NAME = "smtp.gmail.com";
+    public static final String HOST_NAME = "smtp.gmail.com";
+    public static final int SSL_PORT = 465;
+    
+    // Thông tin tài khoản gửi
+    public static final String APP_EMAIL = "henryvo2k4@gmail.com";
+    public static final String APP_PASSWORD = "padl oyrs cene skdg"; // Mật khẩu ứng dụng của bạn
 
-  /**
-   * Số cổng SSL cho Gmail SMTP.
-   */
-  public static final int SSL_PORT = 465;
+    /**
+     * Gửi email thông báo HTML chuyên nghiệp khi người dùng offline.
+     * @param toEmail       Địa chỉ email người nhận.
+     * @param senderName    Tên người gửi tin nhắn.
+     * @param messageContent Nội dung tin nhắn.
+     */
+    public static void sendOfflineNotification(String toEmail, String senderName, String messageContent) {
+        // Cấu hình SMTP
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.host", HOST_NAME);
+        props.put("mail.smtp.socketFactory.port", SSL_PORT);
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.smtp.port", SSL_PORT);
 
-  /**
-   * Địa chỉ email ứng dụng được sử dụng làm người gửi.
-   * Đây nên là một tài khoản email chuyên dụng cho hệ thống gửi tin nhắn.
-   */
-  public static final String APP_EMAIL = "phichinh08012004@gmail.com"; // Thay thế bằng email kiểm test thực tế
+        // Xác thực tài khoản
+        Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                // JavaMail sẽ tự động bỏ qua khoảng trắng trong mật khẩu ứng dụng
+                return new PasswordAuthentication(APP_EMAIL, APP_PASSWORD);
+            }
+        });
 
-  /**
-   * Mật khẩu ứng dụng cho tài khoản email người gửi.
-   * Đây là mật khẩu dành riêng cho ứng dụng gồm 16 ký tự được tạo bởi Gmail để truy cập an toàn.
-   * Lưu Ý: Trong sản xuất, điều này phải được lưu trữ an toàn, không được mã hóa cứng.
-   */
-  public static final String APP_PASSWORD = "kiaoftgmzuswbotz"; // Thay thế bằng mật khẩu ứng dụng thực tế
+        try {
+            // 1. Lấy thời gian hiện tại
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            String timeStr = formatter.format(new Date());
 
-  /**
-   * Gửi email thông báo ngoại tuyến cho người dùng về tin nhắn riêng tư mới.
-   *
-   * Các Khối Chức Năng:
-   * 1. Định Cấu Hình SMTP: Thiết lập thuộc tính máy chủ thư cho kết nối SSL
-   * 2. Thiết Lập Xác Thực: Định cấu hình phiên với thông tin xác thực ứng dụng
-   * 3. Tạo Tin Nhắn: Xây dựng tin nhắn email với người nhận, chủ đề và nội dung
-   * 4. Truyền Email: Gửi tin nhắn qua SMTP
-   * 5. Xử Lý Lỗi: Ghi lại thành công hoặc xử lý các lỗi gửi
-   *
-   * @param toEmail Địa chỉ email của người nhận
-   * @param content Nội dung tin nhắn để đưa vào phần thân email
-   */
-  public static void sendOfflineNotification(String toEmail, String content) {
-    // Khối 1: Định cấu hình thuộc tính SMTP cho kết nối an toàn
-    Properties props = new Properties();
-    props.put("mail.smtp.auth", "true");
-    props.put("mail.smtp.host", HOST_NAME);
-    props.put("mail.smtp.socketFactory.port", SSL_PORT);
-    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-    props.put("mail.smtp.port", SSL_PORT);
+            // 2. Thiết kế Template HTML
+            String htmlContent = 
+                "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;'>" +
+                    "<div style='background-color: #4f46e5; color: white; padding: 20px; text-align: center;'>" +
+                        "<h2 style='margin: 0;'>Thông báo Z-Chat</h2>" +
+                    "</div>" +
+                    "<div style='padding: 30px; color: #333; background-color: #ffffff;'>" +
+                        "<p style='font-size: 16px;'>Chào bạn,</p>" +
+                        "<p style='font-size: 16px;'>Bạn có một tin nhắn riêng tư mới từ <strong>" + senderName + "</strong>:</p>" +
+                        
+                        // Khung nội dung tin nhắn
+                        "<div style='background-color: #f3f6fd; padding: 15px; border-left: 4px solid #4f46e5; border-radius: 4px; margin: 20px 0; font-style: italic; color: #555;'>" +
+                            "\"" + messageContent + "\"" +
+                        "</div>" +
+                        
+                        "<p style='font-size: 14px; color: #888;'>Thời gian nhận: " + timeStr + "</p>" +
+                        "<p style='font-size: 16px;'>Vui lòng đăng nhập vào ứng dụng để phản hồi.</p>" +
+                    "</div>" +
+                    "<div style='background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee;'>" +
+                        "© 2026 Hệ thống Z-Chat Enterprise. Vui lòng không trả lời email này." +
+                    "</div>" +
+                "</div>";
 
-    // Khối 2: Thiết lập xác thực cho phiên thư
-    Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
-      protected PasswordAuthentication getPasswordAuthentication() {
-        return new PasswordAuthentication(APP_EMAIL, APP_PASSWORD);
-      }
-    });
+            // 3. Tạo và cấu hình tin nhắn
+            MimeMessage message = new MimeMessage(session);
+            
+            // THIẾT LẬP TÊN HIỂN THỊ (Sẽ hiện "Hệ thống Z-Chat" thay vì henryvo2k4)
+            message.setFrom(new InternetAddress(APP_EMAIL, "Z-Chats", "UTF-8"));
+            
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+            message.setSubject("Tin nhắn mới từ " + senderName + " - Z-Chat");
+            
+            // Gửi dưới dạng HTML
+            message.setContent(htmlContent, "text/html; charset=UTF-8");
 
-    try {
-      // Khối 3: Tạo tin nhắn email
-      MimeMessage message = new MimeMessage(session);
-      message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-      message.setSubject("Notification: You have a new offline message!");
-      message.setText(content);
+            // 4. Thực thi gửi email
+            Transport.send(message);
+            System.out.println("Email chuyên nghiệp đã được gửi tới: " + toEmail);
 
-      // Khối 4: Gửi email
-      Transport.send(message);
-
-      // Khối 5: Ghi lại việc truyền thành công
-      System.out.println("Offline notification email sent successfully to: " + toEmail);
-    } catch (MessagingException e) {
-      // Khối 5: Xử lý và ghi lại các lỗi gửi email
-      System.err.println("Error sending email to " + toEmail + ": " + e.getMessage());
-      e.printStackTrace();
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            // Bắt chung 2 ngoại lệ: Lỗi cấu hình thư (MessagingException) và Lỗi bảng mã chữ (UnsupportedEncodingException)
+            System.err.println("Lỗi gửi email: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-  }
 }

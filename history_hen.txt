@@ -21,3 +21,9 @@ dung|::|dung|::|false|::|13:38|::|Tôi đã tạo nhóm [hi]. Hãy gõ lệnh JO
 dung|::|dung|::|false|::|13:38|::|hi
 dung|::|hen|::|true|::|13:38|::|JOINGROUP hi
 dung|::|hen|::|true|::|13:38|::|nu
+ry|::|hen|::|true|::|10:18|::|hu hu
+dung|::|hen|::|true|::|18/04/2026 13:27|::|Đã gửi tệp: app.png
+dung|::|hen|::|true|::|18/04/2026 13:27|::|hi
+dung|::|dung|::|false|::|18/04/2026 13:41|::|[Đã đính kèm tệp]: app.png
+dung|::|hen|::|true|::|18/04/2026 13:59|::|[FILE]: 1776495587588_app.png
+dung|::|hen|::|true|::|18/04/2026 14:01|::|[FILE]: 1776495672238_CV_VO TA DUNG.png

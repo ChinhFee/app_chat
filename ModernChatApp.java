@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,7 +17,7 @@ public class ModernChatApp {
     private JPanel cardPanel;
     private CardLayout cardLayout;
 
-    // UI - Đăng nhập / Đăng ký (ĐÃ THÊM txtEmailReg)
+    // UI - Đăng nhập / Đăng ký 
     private JTextField txtUserLogin, txtUserReg, txtEmailReg;
     private JPasswordField txtPassLogin, txtPassReg;
 
@@ -41,6 +43,8 @@ public class ModernChatApp {
     private HashSet<String> activeChats = new HashSet<>();
     private HashSet<String> onlineUsers = new HashSet<>(); 
     private HashMap<String, JLabel> statusLabelsMap = new HashMap<>(); 
+    
+    private HashMap<String, String> lastDateMap = new HashMap<>(); 
 
     private static final Color[] AVATAR_COLORS = {
         new Color(239, 68, 68), new Color(249, 115, 22), new Color(16, 185, 129), 
@@ -71,6 +75,29 @@ public class ModernChatApp {
     }
 
     // ==========================================
+    // HÀM PHỤ TRỢ: TẠO LOGO 
+    // ==========================================
+    private JLabel createLogoLabel() {
+        JLabel lblLogo = new JLabel();
+        try {
+            ImageIcon icon = new ImageIcon("avt.png"); 
+            if (icon.getIconWidth() > -1) {
+                // Kích thước Logo 200x200
+                Image img = icon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
+                lblLogo.setIcon(new ImageIcon(img));
+            } else {
+                lblLogo.setText("Z-CHATS");
+                lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 36));
+                lblLogo.setForeground(new Color(79, 70, 229));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return lblLogo;
+    }
+
+    // ==========================================
     // 1. MÀN HÌNH XÁC THỰC
     // ==========================================
     private JPanel createAuthScreen() {
@@ -78,11 +105,11 @@ public class ModernChatApp {
         wrapper.setBackground(new Color(243, 246, 253));
 
         JPanel authBox = new JPanel(new CardLayout());
-        // Tăng chiều cao lên 560 để chứa thêm ô Email
+        // Thu gọn chiều cao về 560 vì Logo đã được đưa ra ngoài
         authBox.setPreferredSize(new Dimension(420, 560)); 
         authBox.putClientProperty("FlatLaf.style", "arc: 35");
         authBox.setBackground(Color.WHITE);
-        authBox.setBorder(new EmptyBorder(40, 40, 40, 40));
+        authBox.setBorder(new EmptyBorder(20, 40, 20, 40));
 
         // --- PANEL ĐĂNG NHẬP ---
         JPanel loginPanel = new JPanel();
@@ -120,6 +147,7 @@ public class ModernChatApp {
         btnGoToReg.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnGoToReg.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // Khôi phục lại khoảng cách cho Panel Đăng nhập
         loginPanel.add(Box.createVerticalStrut(40));
         loginPanel.add(lblLoginTitle);
         loginPanel.add(Box.createVerticalStrut(45));
@@ -146,7 +174,6 @@ public class ModernChatApp {
         txtUserReg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         txtUserReg.setAlignmentX(Component.CENTER_ALIGNMENT); 
 
-        // Ô nhập Email Mới
         txtEmailReg = new JTextField();
         txtEmailReg.putClientProperty("JTextField.placeholderText", "Email cá nhân");
         txtEmailReg.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
@@ -173,13 +200,13 @@ public class ModernChatApp {
         btnBackToLogin.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnBackToLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Bố cục lại khoảng cách để nhét vừa 3 ô
+        // Khôi phục lại khoảng cách cho Panel Đăng ký
         regPanel.add(Box.createVerticalStrut(20));
         regPanel.add(lblRegTitle);
         regPanel.add(Box.createVerticalStrut(35));
         regPanel.add(txtUserReg);
         regPanel.add(Box.createVerticalStrut(15));
-        regPanel.add(txtEmailReg); // Nạp ô Email vào Giao diện
+        regPanel.add(txtEmailReg); 
         regPanel.add(Box.createVerticalStrut(15));
         regPanel.add(txtPassReg);
         regPanel.add(Box.createVerticalStrut(25));
@@ -194,7 +221,6 @@ public class ModernChatApp {
         btnGoToReg.addActionListener(e -> cl.show(authBox, "REG_SCREEN"));
         btnBackToLogin.addActionListener(e -> cl.show(authBox, "LOGIN_SCREEN"));
 
-        // Xử lý nút Đăng Nhập
         btnLogin.addActionListener(e -> {
             String u = txtUserLogin.getText().trim();
             String p = new String(txtPassLogin.getPassword());
@@ -205,21 +231,32 @@ public class ModernChatApp {
             }
         });
 
-        // Xử lý nút Đăng Ký (Đã lấy Email)
         btnRegister.addActionListener(e -> {
             String u = txtUserReg.getText().trim();
             String mail = txtEmailReg.getText().trim();
             String p = new String(txtPassReg.getPassword());
             
             if(!u.isEmpty() && !p.isEmpty() && !mail.isEmpty()) {
-                // Ghép đúng format REGISTER user|pass|email
                 connectToServer("REGISTER " + u + "|" + p + "|" + mail, u);
             } else {
                 JOptionPane.showMessageDialog(frame, "Vui lòng điền đầy đủ Tên, Email và Mật khẩu!");
             }
         });
 
-        wrapper.add(authBox);
+        // BỐ TRÍ LOGO VÀ KHUNG TRẮNG LÊN NỀN XANH
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        
+        // 1. Thêm Logo lên trên cùng (Y = 0)
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 20, 0); // Khoảng cách 20px bên dưới Logo
+        wrapper.add(createLogoLabel(), gbc);
+        
+        // 2. Thêm Khung Form Đăng nhập xuống dưới (Y = 1)
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        wrapper.add(authBox, gbc);
+
         return wrapper;
     }
 
@@ -244,9 +281,18 @@ public class ModernChatApp {
         
         JPanel myProfilePanel = new JPanel(new BorderLayout(10, 0));
         myProfilePanel.setOpaque(false);
-        lblMyProfile = new JLabel(); 
         
-        JLabel lblChats = new JLabel("Chats HCD");
+        lblMyProfile = new JLabel(); 
+        lblMyProfile.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblMyProfile.setToolTipText("Nhấn vào đây để xem/sửa thông tin cá nhân");
+        lblMyProfile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showEditProfilePopup();
+            }
+        });
+        
+        JLabel lblChats = new JLabel("Z-Chats");
         lblChats.setFont(new Font("Segoe UI", Font.BOLD, 22));
         
         JButton btnCreateGroup = new JButton("+");
@@ -377,15 +423,31 @@ public class ModernChatApp {
         btnSend.setForeground(Color.WHITE);
         btnSend.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
+        // ==== XỬ LÝ CHỌN VÀ GỬI FILE MỚI ====
         btnAttach.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 try {
-                    fileClient.sendFile("localhost", 1988, file.getAbsolutePath());
-                    appendMessageBubble(currentChatTarget, currentUsername, "Đã gửi tệp: " + file.getName(), true, true, null);
+                    // Tạo một cái tên duy nhất để gửi lên Server
+                    String uniqueName = System.currentTimeMillis() + "_" + file.getName();
+                    
+                    // Gửi file vật lý lên FileServer
+                    fileClient.sendFile("localhost", 1988, file.getAbsolutePath(), uniqueName);
+                    
+                    // Gửi thông báo [FILE] qua Chat Server
+                    String fileMsg = "[FILE]: " + uniqueName;
+                    if (currentChatTarget.equals("ALL")) {
+                        outToServer.println("CHATALL " + fileMsg);
+                    } else {
+                        outToServer.println("CHATPRIVATE " + currentChatTarget + "|" + fileMsg);
+                    }
+
+                    // Hiển thị ngay lên màn hình của mình
+                    appendMessageBubble(currentChatTarget, currentUsername, fileMsg, true, true, null);
                 } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(frame, "Lỗi gửi file: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(frame, "Lỗi gửi file: Hãy chắc chắn File Server đang chạy!");
+                    ex.printStackTrace();
                 }
             }
         });
@@ -488,10 +550,8 @@ public class ModernChatApp {
                 return;
             }
             
-            // Lệnh kết nối cho bản thân
             outToServer.println("JOINGROUP " + gName);
             
-            // Gửi tin nhắn ẩn mời người khác tham gia (Mẹo xử lý không cần đổi Server)
             for (String u : checkboxes.keySet()) {
                 if (checkboxes.get(u).isSelected()) {
                     outToServer.println("CHATPRIVATE " + u + "|Tôi đã tạo nhóm [" + gName + "]. Hãy gõ lệnh JOINGROUP " + gName + " để tham gia nhé!");
@@ -507,6 +567,120 @@ public class ModernChatApp {
         content.add(scroll);
         content.add(Box.createVerticalStrut(25));
         content.add(btnCreate);
+
+        dialog.add(content);
+        dialog.setVisible(true);
+    }
+
+    // ==========================================
+    // POPUP CHỈNH SỬA THÔNG TIN CÁ NHÂN (PROFILE) 
+    // ==========================================
+    private void showEditProfilePopup() {
+        JDialog dialog = new JDialog(frame, "Cài Đặt Tài Khoản", true);
+        dialog.setSize(380, 500); 
+        dialog.setLocationRelativeTo(frame);
+        dialog.getContentPane().setBackground(Color.WHITE);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(Color.WHITE);
+        content.setBorder(new EmptyBorder(25, 40, 25, 40));
+
+        // 1. Header Avatar 
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblBigAvt = new JLabel(new AvatarIcon(currentUsername, 75, getColorForName(currentUsername)));
+        headerPanel.add(lblBigAvt);
+        
+        // --- HỘP TÀNG HÌNH: Ép Label sát viền trái ---
+        JPanel pnlName = new JPanel(new BorderLayout());
+        pnlName.setOpaque(false);
+        pnlName.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25)); 
+        JLabel lblName = new JLabel("Tên đăng nhập (Chỉ xem):");
+        lblName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblName.setForeground(new Color(100, 100, 100));
+        pnlName.add(lblName, BorderLayout.WEST); 
+        pnlName.setAlignmentX(Component.CENTER_ALIGNMENT); 
+        
+        JTextField txtName = new JTextField(currentUsername);
+        txtName.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        txtName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        txtName.setEditable(false);
+        txtName.setBackground(new Color(245, 245, 245));
+        txtName.setToolTipText("Tên đăng nhập được sử dụng làm mã định danh trên hệ thống nên không thể thay đổi.");
+
+        // --- HỘP TÀNG HÌNH CHO MẬT KHẨU ---
+        JPanel pnlPass = new JPanel(new BorderLayout());
+        pnlPass.setOpaque(false);
+        pnlPass.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        JLabel lblPass = new JLabel("Mật khẩu mới:");
+        lblPass.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        pnlPass.add(lblPass, BorderLayout.WEST);
+        pnlPass.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JPasswordField txtPass = new JPasswordField();
+        txtPass.putClientProperty("JTextField.placeholderText", "Bỏ trống nếu không đổi...");
+        txtPass.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        txtPass.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // --- HỘP TÀNG HÌNH CHO EMAIL ---
+        JPanel pnlEmail = new JPanel(new BorderLayout());
+        pnlEmail.setOpaque(false);
+        pnlEmail.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        JLabel lblEmail = new JLabel("Email mới:");
+        lblEmail.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        pnlEmail.add(lblEmail, BorderLayout.WEST);
+        pnlEmail.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JTextField txtEmail = new JTextField();
+        txtEmail.putClientProperty("JTextField.placeholderText", "Nhập email mới để thay đổi...");
+        txtEmail.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        txtEmail.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Nút Lưu thay đổi
+        JButton btnSave = new JButton("Lưu Thay Đổi");
+        btnSave.setBackground(new Color(16, 185, 129));
+        btnSave.setForeground(Color.WHITE);
+        btnSave.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btnSave.putClientProperty("FlatLaf.style", "arc: 999");
+        btnSave.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        btnSave.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnSave.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        btnSave.addActionListener(e -> {
+            String newPass = new String(txtPass.getPassword()).trim();
+            String newEmail = txtEmail.getText().trim();
+            
+            if(newPass.isEmpty() && newEmail.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Bạn chưa nhập thông tin mới nào để cập nhật!");
+                return;
+            }
+
+            outToServer.println("UPDATE_PROFILE " + newPass + "|" + newEmail);
+            
+            JOptionPane.showMessageDialog(dialog, 
+                "Đã chỉnh sửa thông tin!", 
+                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            dialog.dispose();
+        });
+
+        // Ghép mọi thứ vào Form chính
+        content.add(headerPanel);
+        content.add(Box.createVerticalStrut(15));
+        content.add(pnlName); 
+        content.add(Box.createVerticalStrut(5));
+        content.add(txtName);
+        content.add(Box.createVerticalStrut(15));
+        content.add(pnlPass);
+        content.add(Box.createVerticalStrut(5));
+        content.add(txtPass);
+        content.add(Box.createVerticalStrut(15));
+        content.add(pnlEmail);
+        content.add(Box.createVerticalStrut(5));
+        content.add(txtEmail);
+        content.add(Box.createVerticalStrut(25));
+        content.add(btnSave);
 
         dialog.add(content);
         dialog.setVisible(true);
@@ -617,6 +791,7 @@ public class ModernChatApp {
     }
 
     private void loadHistory() {
+        lastDateMap.clear(); 
         try {
             File f = new File("history_" + currentUsername + ".txt");
             if (!f.exists()) return;
@@ -636,13 +811,43 @@ public class ModernChatApp {
                     String sender = parts[1];
                     boolean isMe = Boolean.parseBoolean(parts[2]);
                     String message = parts[3].replace("\\n", "\n");
-                    appendMessageBubble(targetId, sender, message, isMe, false, new SimpleDateFormat("HH:mm").format(new Date()));
+                    appendMessageBubble(targetId, sender, message, isMe, false, new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()));
                 }
             }
             br.close();
         } catch (IOException e) {
             System.err.println("Error loading chat history for " + currentUsername + ": " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    // ==== HÀM PHỤ TRỢ MỞ/TẢI FILE TỪ SERVER CỤC BỘ ====
+    private void downloadOrOpenFile(File sourceFile, String fileName) {
+        if (!sourceFile.exists()) {
+            JOptionPane.showMessageDialog(frame, "Lỗi: File không còn tồn tại trên Server!");
+            return;
+        }
+        
+        // Lấy tên gốc để làm tên đề xuất khi tải (bỏ qua đoạn số timestamp)
+        String realName = fileName.contains("_") ? fileName.substring(fileName.indexOf("_") + 1) : fileName;
+        
+        JFileChooser chooser = new JFileChooser();
+        chooser.setSelectedFile(new File(realName));
+        chooser.setDialogTitle("Lưu tệp đính kèm");
+        
+        if (chooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
+            File destFile = chooser.getSelectedFile();
+            try {
+                // Copy từ thư mục server_files ra máy người dùng
+                Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                
+                int open = JOptionPane.showConfirmDialog(frame, "Đã tải xong! Bạn có muốn mở file lên xem không?", "Tải thành công", JOptionPane.YES_NO_OPTION);
+                if (open == JOptionPane.YES_OPTION) {
+                    Desktop.getDesktop().open(destFile);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, "Lỗi khi lưu file: " + ex.getMessage());
+            }
         }
     }
 
@@ -656,6 +861,42 @@ public class ModernChatApp {
             addActiveChat(targetId, targetId, null);
         }
 
+        if (timeStr == null || timeStr.isEmpty()) {
+            timeStr = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date());
+        }
+
+        String datePart = "";
+        String timePart = timeStr;
+
+        if (timeStr.contains(" ")) {
+            String[] parts = timeStr.split(" ");
+            if (parts.length >= 2) {
+                datePart = parts[0];
+                timePart = parts[1]; 
+            }
+        } else {
+            datePart = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        }
+
+        String lastDate = lastDateMap.getOrDefault(targetId, "");
+        if (!datePart.equals(lastDate)) {
+            String todayStr = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+            String displayText = datePart.equals(todayStr) ? "Hôm nay" : datePart;
+
+            JPanel separatorPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            separatorPanel.setOpaque(false);
+            separatorPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
+
+            JLabel lblDate = new JLabel("--- " + displayText + " ---");
+            lblDate.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            lblDate.setForeground(new Color(150, 150, 150)); 
+
+            separatorPanel.add(lblDate);
+            targetPanel.add(separatorPanel);
+
+            lastDateMap.put(targetId, datePart);
+        }
+
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setOpaque(false);
         wrapper.setBorder(new EmptyBorder(5, 10, 5, 10));
@@ -663,28 +904,97 @@ public class ModernChatApp {
         JLabel lblAvt = new JLabel(new AvatarIcon(sender, 40, getColorForName(sender)));
         lblAvt.setVerticalAlignment(SwingConstants.BOTTOM);
 
-        JTextArea txtMsg = new JTextArea(message);
-        txtMsg.setWrapStyleWord(true);
-        txtMsg.setLineWrap(true);
-        txtMsg.setEditable(false);
-        txtMsg.setOpaque(false);
-        txtMsg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        // Biến lưu trữ khung hiển thị nội dung (chữ, hình hoặc nút file)
+        Component messageContentComp;
         
-        int textWidth = Math.min(message.length() * 8, 400); 
-        txtMsg.setSize(new Dimension(textWidth, Short.MAX_VALUE));
-        
-        if (timeStr == null) {
-            timeStr = new SimpleDateFormat("HH:mm").format(new Date());
+        boolean isFile = message.startsWith("[FILE]: ");
+
+        if (isFile) {
+            String fileName = message.substring(8);
+            File f = new File("server_files/" + fileName);
+            String lowerName = fileName.toLowerCase();
+
+            // Nếu là file Ảnh -> Hiển thị trực tiếp vào bong bóng
+            if (lowerName.endsWith(".jpg") || lowerName.endsWith(".png") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif")) {
+                JLabel imgLabel = new JLabel();
+                if (f.exists()) {
+                    ImageIcon icon = new ImageIcon(f.getAbsolutePath());
+                    int width = icon.getIconWidth();
+                    int height = icon.getIconHeight();
+                    
+                    // Thu nhỏ ảnh nếu kích thước quá lớn
+                    if (width > 200) {
+                        height = (int) (height * (200.0 / width));
+                        width = 200;
+                    } else if (width <= 0) { 
+                        width = 150; height = 150;
+                    }
+                    
+                    Image newImg = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                    imgLabel.setIcon(new ImageIcon(newImg));
+                } else {
+                    imgLabel.setText("[Hình ảnh đang tải hoặc bị lỗi]");
+                    imgLabel.setForeground(isMe ? Color.WHITE : Color.BLACK);
+                }
+                
+                imgLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                imgLabel.setToolTipText("Nhấn để xem / Tải về");
+                // Bấm vào ảnh cũng tải về
+                imgLabel.addMouseListener(new MouseAdapter() {
+                    public void mouseClicked(MouseEvent e) {
+                        downloadOrOpenFile(f, fileName);
+                    }
+                });
+                messageContentComp = imgLabel;
+                
+            } else {
+                // Nếu là file khác -> Hiển thị dạng nút bấm
+                String realName = fileName.contains("_") ? fileName.substring(fileName.indexOf("_") + 1) : fileName;
+                JButton fileBtn = new JButton("📄 " + realName);
+                fileBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                fileBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                fileBtn.setFocusPainted(false);
+                
+                if (isMe) {
+                    fileBtn.setBackground(new Color(255, 255, 255, 80)); // Nút mờ đi một chút trên nền xanh
+                    fileBtn.setForeground(Color.WHITE);
+                } else {
+                    fileBtn.setBackground(Color.WHITE);
+                    fileBtn.setForeground(new Color(50, 50, 50));
+                }
+                
+                fileBtn.setToolTipText("Nhấn để tải tệp này về");
+                fileBtn.addActionListener(e -> downloadOrOpenFile(f, fileName));
+                messageContentComp = fileBtn;
+            }
+            
+        } else {
+            // Xử lý chat Text bình thường
+            String textToShow = message.startsWith("[Đã đính kèm tệp]: ") ? "File: " + message.substring(20) : message;
+            JTextArea txtMsg = new JTextArea(textToShow);
+            txtMsg.setWrapStyleWord(true);
+            txtMsg.setLineWrap(true);
+            txtMsg.setEditable(false);
+            txtMsg.setOpaque(false);
+            txtMsg.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+            
+            int textWidth = Math.min(textToShow.length() * 8, 400); 
+            txtMsg.setSize(new Dimension(textWidth, Short.MAX_VALUE));
+            
+            if (isMe) txtMsg.setForeground(Color.WHITE);
+            else txtMsg.setForeground(Color.BLACK);
+            
+            messageContentComp = txtMsg;
         }
 
-        if (isMe) {
-            txtMsg.setForeground(Color.WHITE);
-            BubblePanel bubble = new BubblePanel(new Color(0, 132, 255));
-            bubble.setLayout(new BorderLayout());
-            bubble.setBorder(new EmptyBorder(10, 15, 10, 15));
-            bubble.add(txtMsg, BorderLayout.CENTER);
+        // Bọc vào bong bóng chat
+        BubblePanel bubble = new BubblePanel(isMe ? new Color(0, 132, 255) : new Color(228, 230, 235));
+        bubble.setLayout(new BorderLayout());
+        bubble.setBorder(new EmptyBorder(10, 15, 10, 15));
+        bubble.add(messageContentComp, BorderLayout.CENTER);
 
-            JLabel lblTime = new JLabel(timeStr, SwingConstants.RIGHT);
+        if (isMe) {
+            JLabel lblTime = new JLabel(timePart, SwingConstants.RIGHT);
             lblTime.setFont(new Font("Segoe UI", Font.PLAIN, 11));
             lblTime.setForeground(Color.GRAY);
             lblTime.setBorder(new EmptyBorder(2, 0, 0, 0));
@@ -700,18 +1010,12 @@ public class ModernChatApp {
             alignPanel.add(lblAvt);      
             wrapper.add(alignPanel, BorderLayout.EAST);
         } else {
-            txtMsg.setForeground(Color.BLACK);
-            BubblePanel bubble = new BubblePanel(new Color(228, 230, 235));
-            bubble.setLayout(new BorderLayout());
-            bubble.setBorder(new EmptyBorder(10, 15, 10, 15));
-            bubble.add(txtMsg, BorderLayout.CENTER);
-
             JLabel lblName = new JLabel(sender);
             lblName.setFont(new Font("Segoe UI", Font.BOLD, 12));
             lblName.setForeground(new Color(100, 100, 100));
             lblName.setBorder(new EmptyBorder(0, 5, 3, 0));
 
-            JLabel lblTime = new JLabel(timeStr, SwingConstants.LEFT);
+            JLabel lblTime = new JLabel(timePart, SwingConstants.LEFT);
             lblTime.setFont(new Font("Segoe UI", Font.PLAIN, 11));
             lblTime.setForeground(Color.GRAY);
             lblTime.setBorder(new EmptyBorder(2, 5, 0, 0));
@@ -754,6 +1058,7 @@ public class ModernChatApp {
         return AVATAR_COLORS[hash % AVATAR_COLORS.length];
     }
 
+    
     private void addOnlineUser(String username) {
         for (Component c : onlineUsersPanel.getComponents()) {
             if (c.getName() != null && c.getName().equals(username)) return;
@@ -777,6 +1082,21 @@ public class ModernChatApp {
 
         btnAvatar.addActionListener(e -> {
             addActiveChat(username, username, null);
+
+            currentChatTarget = username;
+            lblChatName.setText(username);
+            lblChatAvatar.setIcon(new AvatarIcon(username, 45, getColorForName(username)));
+            
+            lblChatStatus.setText("Đang hoạt động");
+            lblChatStatus.setForeground(new Color(16, 163, 127));
+
+            JPanel targetPanel = getOrCreateChatPanel(username);
+            chatScrollPane.setViewportView(targetPanel);
+
+            SwingUtilities.invokeLater(() -> {
+                JScrollBar vertical = chatScrollPane.getVerticalScrollBar();
+                vertical.setValue(vertical.getMaximum());
+            });
         });
 
         onlineUsersPanel.add(userPanel);
